@@ -2,6 +2,7 @@ const http = require("http")
 const express = require("express")
 const bodyParser = require("body-parser")
 const cors = require("cors")
+const path = require("path")    
 const mysql = require("mysql")
 const {AddUser,removeUser, getConnectedUsers, getCurrentUser, addTypingUser, getTypingALLUsers,removeTypingUser} = require("./utils")
 
