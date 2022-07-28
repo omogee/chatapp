@@ -253,6 +253,6 @@ if(process.env.NODE_ENV === "production"){
         res.sendFile(path.join(__dirname, 'frontend','build', 'index.html'));
     })
     }  
-server.listen(5000, ()=>{
+server.listen(process.env.PORT ||  5000, ()=>{
     console.log("port running on 5000 ogbonnaya")
 })
