@@ -4,8 +4,13 @@
   "description": "a mobile friendly mini chat site",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "build": "cd frontend && npm run build",
+    "install-client": "cd frontend && npm install",
+    "heroku-postbuild": "npm run install-client && npm run build",
+    "frontend": "cd frontend && npm start",
+    "server": "concurrently \" npm run dev \" \"npm run frontend\""
   },
   "author": "Eze Ogbonnaya",
   "license": "ISC",
