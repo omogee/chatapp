@@ -31,18 +31,18 @@ function App() {
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
    socket.connect() 
 
-    axios.get(`http://localhost:5000/fetch-users?id=${decryptedData}`)
+    axios.get(`https://realchatapps.herokuapp.com//fetch-users?id=${decryptedData}`)
     .then(res => setusers(res.data))
     .catch(err => console.warn(err))
     
-    axios.get(`http://localhost:5000/fetch-pendingconnections?requestid=${decryptedData}`)
+    axios.get(`https://realchatapps.herokuapp.com//fetch-pendingconnections?requestid=${decryptedData}`)
     .then(res => {
       setrequestedconn(res.data.requestedconn)
       setpendingconn(res.data.pendingconn)
     })
     .catch(err => console.warn(err))
 
-     axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
+     axios.get(`https://realchatapps.herokuapp.com//fetch-connections?id=${decryptedData}`)
     .then(res => setconnections(res.data))
     .catch(err => console.warn(err))
     }

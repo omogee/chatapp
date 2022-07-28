@@ -210,7 +210,7 @@ function Home(props) {
            <div className='container'>
             <div className='row'>
               <div className='col-6'>
-                <img style={{width:"50%",padding:"30px"}} src={`http://localhost:5000/static/media/fruget.d6e6cf52.jpg`} />
+                <img style={{width:"50%",padding:"30px"}} src={`https://realchatapps.herokuapp.com//static/media/fruget.d6e6cf52.jpg`} />
                 <div style={{padding:"10px"}}>
                  
                   <p style={{color:"grey",fontSize:"18px"}} >Being a member of this great family you can chat, send video clips and also engage in conversations without coming in contact<br/>
