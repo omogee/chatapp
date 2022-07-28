@@ -18,7 +18,7 @@ function Login(props) {
       setinput(prev => ({...prev, [e.target.name]:e.target.value}))
     }
     const login =()=>{
-        axios.get(`https://realchatapps.herokuapp.com/login?name=${input.username}&password=${input.password}`)
+        axios.get(`https://realchatapps.herokuapp.com/user/login?name=${input.username}&password=${input.password}`)
         .then(res => {
              if(Cookies.get("cvyx")){
                  var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');

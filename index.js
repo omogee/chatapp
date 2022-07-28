@@ -221,7 +221,7 @@ app.get("/fetch-user",(req,res)=>{
         res.send(users)
     })
 })
-app.get("/login", (req,res)=>{
+app.get("/user/login", (req,res)=>{
     conn.query(`select userid,username from users where (email =? or username=?) and password=?`,[req.query.name,req.query.name,req.query.password],(err, user)=>{
         if (err) throw err;
         if (!user || user.length === 0){
@@ -234,7 +234,7 @@ app.get("/login", (req,res)=>{
     })
     
 })
-app.post("/register", (req,res)=>{
+app.post("/user/register", (req,res)=>{
     const body = JSON.parse(req.body.data)
     conn.query(`insert into users (name,username, email, gender, contact, password) values (?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,body.contact,body.password],(err, file)=>{
       if(err){
