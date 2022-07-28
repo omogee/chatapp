@@ -1,0 +1,11 @@
+.inboxImage{width:8%}
+.inboxDetails{width:85%;position:relative}
+.inboxSidelinks{font-size: 25px;width:8%}
+.inboxdisplaylinks{position:fixed;top:0px;z-index:10000;right:7%;width:30%;opacity:0.9;overflow:hidden;background-color:white}
+
+@media all and (max-width:600px) {
+  .inboxImage{width:12%}
+  .inboxDetails{width:70%;position:relative}
+  .inboxSidelinks{font-size: 25px;width:13%}
+  .inboxdisplaylinks{position:fixed;top:0px;z-index:10000;right:7%;width:50%;opacity:0.9;overflow:hidden;background-color:white}
+}

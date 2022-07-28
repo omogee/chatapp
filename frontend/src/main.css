@@ -1,0 +1,75 @@
+.title {
+    display: flex;
+    flex-direction: row;
+    color:grey
+  }
+  .title:before, .title:after{
+    content: "";
+    flex: 1 1;
+    border-bottom: 1px solid #FF6347;
+    margin: auto;
+  }
+  .title:before {
+    margin-right: 10px
+  }
+  .title:after {
+    margin-left: 10px
+  }
+  .row input{
+    border-radius:0;
+    background-color:rgba(252,252,252,0.1);
+    border:20px;
+    border-bottom:1px solid grey;
+    box-shadow:none
+  }
+  .row input:focus{
+      outline: none;
+      box-shadow: none !important;
+      border-radius:0;
+    background-color:rgba(255,255,255,0.1);
+    border:0;
+      border-bottom: 1px solid #FF6347;
+  }
+  .row .col-6 input:focus{
+      box-shadow:0;
+      outline:"none"
+  }
+
+  .messagebox{
+    width:57%
+  }
+  .usersdiv{
+    left:30%;top:15%;width:35%;
+  }
+  @media all and (max-width: 1200px) and (min-width:992px){
+    .messagebox{
+      width:50%
+    }
+    .usersdiv{
+      left:30%;top:15%;width:40%;
+    }
+  }
+  @media all and (max-width: 992px)  and (min-width:768px){
+    .messagebox{
+      width:45%
+    }
+    .usersdiv{
+      left:30%;top:15%;width:40%;
+    }
+  }
+  @media all and (max-width: 768px) and (min-width:550px){
+    .messagebox{
+      width:65%
+    }
+    .usersdiv{
+      left:25%;top:15%;width:50%;
+    }
+  }
+  @media all and (max-width: 550px){
+    .messagebox{
+      width:90%
+    }
+    .usersdiv{
+      left:15%;top:15%;width:70%;
+    }
+  }

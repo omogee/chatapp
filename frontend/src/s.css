@@ -1,0 +1,112 @@
+*{background:transparent}
+.navdiv{
+    display:flex;
+    background-color: white;
+    flex-wrap: nowrap;
+   
+    margin:10px 15px
+}
+.navlist{
+    list-style-type: none;
+    margin-top: 10px;
+}
+.navdivlist{text-align:center;margin-top:15px;}
+.nav-btn{
+    margin-top:10px;
+}
+.second_nav{
+    width:100%;
+    background-color: orange;
+    color:white;
+    height:50px;
+}
+
+.second_navdiv{
+    display:flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    font-weight: bolder;
+    font-size: 14px;
+    position: relative;
+    text-transform: uppercase;
+    
+}
+
+.second_navdiv div{
+    padding-top: 10px;
+    width: 100%;
+    text-align: center;
+}
+.second_navdiv div:hover{
+    color: orange;
+    background-color: white;
+}
+.observe{
+    visibility: hidden;
+    opacity:0;
+    transform: translateY(-100%);
+    transition-property: "opacity visibility transform";
+    transition-duration: 1s;
+    transition-timing-function: linear;
+}
+.section2{
+    transform: translateX(-50%);
+    visibility: hidden;
+    opacity:0;
+    transition-property: "opacity visibility transform";
+    transition-duration: 1s;
+    transition-timing-function: linear;
+}
+.sectionY{
+    transform: translateY(-50%);
+    visibility: hidden;
+    opacity:0;
+    transition-property: "opacity visibility transform";
+    transition-duration: 1s;
+    transition-timing-function: linear;
+}
+
+.bardiv{display:none}
+.navbrand{width:10%}
+.navdiv_sm{display: none;}
+.carodiv{width:100%;height:80vh}
+.discountdiv{position:absolute; top:40%;right:10%;padding:20px;width:20%;background-color:rgba(0,0,0,0.6)}
+.section_Two{width:100%;padding: 100px;}
+.footercontactdiv{position:absolute;background-color:indianred;border:1px solid grey;top:-70px;width:25%;border-radius:50%;height:250px}
+.section_3_img{height:700px;padding:20px}
+
+@media all and (max-width:900px) {
+    .navbrand{width:15%}
+  .logindiv{left:25%;height:70%;width:50%;border-radius: 10px;top:15%}
+  .registerdiv{left:25%;width:50%;border-radius: 10px;top:15%}
+  .carodiv{width:100%;height:90vh}
+  .discountdiv{position:absolute; top:40%;right:10%;padding:15px;width:30%;background-color:rgba(0,0,0,0.5)}
+  .footercontactdiv{position:absolute;background-color:indianred;border:1px solid grey;top:-50px;width:40%;border-radius:50%;height:250px}
+  
+}
+
+@media all and (max-width:600px) {
+    .navbrand{width:20%}
+   .navbrand_sm{width:30%;float:left}
+  .logindiv{left:0;width:100%;border-radius: 0px;top:10%}
+  .registerdiv{left:0;width:100%;border-radius: 0px;top:10%}
+  .carodiv{width:100%;height:100vh}
+  .discountdiv{position:absolute; top:20%;right:0%;padding:10px;width:40%;background-color:rgba(0,0,0,0.5)}
+  .section_Two{width:100%;padding:50px 20px;} 
+  .footercontactdiv{position:absolute;background-color:indianred;border:1px solid grey;top:-50px;width:40%;border-radius:50%;height:250px}
+  .section_3_img{height:300px;padding:20px}
+  }
+@media all and (max-width:520px) {
+    .navbrand_sm{width:30%;float:left}
+     a{color:red}
+    .bardiv{display:block}
+    .navdivlist{display: none; }
+    .navdiv_sm{display:block;position:absolute;width:0px;height:0px;overflow: hidden;text-transform: uppercase;border-right: 2px solid lightgrey;opacity: 0.8;transition-property: "width, height";transition-duration: 1s;transition-timing-function: linear;font-weight: bold;background-color: black;z-index: 10;}
+  .logindiv{left:0;width:100%;border-radius: 0px;top:10%}
+  .registerdiv{left:0;width:100%;border-radius: 0px;top:10%}
+  .carodiv{width:100%;height:100vh}
+  .discountdiv{position:absolute; top:15%;right:0%;padding:10px;width:40%;background-color:rgba(0,0,0,0.5)}
+  .section_Two{width:100%;padding:50px 20px;}  
+.footercontactdiv{position:absolute;background-color:indianred;border:1px solid grey;top:-50px;width:55%;border-radius:50%;height:250px}
+.section_3_img{height:300px;padding:20px}
+}
