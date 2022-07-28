@@ -16,7 +16,7 @@ const change=(e)=>{
     setInputs(prev => ({...prev, [e.target.name]:e.target.value}))
 }
 const register =()=>{
-    axios.post(`https://realchatapps.herokuapp.com//register`,{data:JSON.stringify(inputs)},
+    axios.post(`https://realchatapps.herokuapp.com/register`,{data:JSON.stringify(inputs)},
     {
         headers: {
           'Content-Type': 'application/json'

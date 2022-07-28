@@ -25,7 +25,7 @@ function ChatApp(props) {
         var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   
-   axios.get(`https://realchatapps.herokuapp.com//fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
+   axios.get(`https://realchatapps.herokuapp.com/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
    .then(res => {
        if(res.data.length === 0 || !res.data){
       setredirect(true)
