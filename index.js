@@ -20,12 +20,12 @@ const conn = mysql.createPool({
     connectTimeout  : 60 * 60 * 1000,
     acquireTimeout  : 60 * 60 * 1000,
     timeout         : 60 * 60 * 1000,
-    host: 'localhost',
-    user: 'root',
+    host: 'us-mm-auto-dca-06-b.cleardb.net',
+    user: 'b0d30b2e7ab02c',
     //b9b001ef539d5b 
-    password: 'password',
+    password: '59dc8abb',
     //8b36306e 
-    database: 'chatapp',
+    database: 'heroku_fc784cdf41a7785',
     //heroku_ea5621dea112dad 
     multipleStatements: true,
    // connectionLimit : 20,  
