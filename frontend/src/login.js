@@ -56,7 +56,7 @@ function Login(props) {
         <div className="container">
           <div className='row' >
               <div className='col-1 col-md-3 col-lg-4'></div>
-              <div className='col-10 col-md-6 col-lg-4' style={{backgroundColor:"rgba(255,255,255,0.8)",padding:"20px",marginTop:"10%"}}>
+              <div className='col-10 col-md-6 col-lg-4' style={{backgroundColor:"rgba(255,255,255,0.8)",padding:"20px",marginTop:"20%"}}>
                   <div style={{width:"100%"}}>
                    <div style={{textAlign:"center"}}>
                        <h4 className="title">LOGIN</h4>

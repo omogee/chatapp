@@ -18,12 +18,14 @@
   transition-timing-function: linear;
   transition-delay: 0.5s;
 }
+.lgpadding{padding:50px}
 
 @media all and (max-width:600px) {
   .inboxImage{width:15%}
   .inboxDetails{width:70%;position:relative}
   .inboxSidelinks{font-size: 25px;width:13%}
   .inboxdisplaylinks{position:fixed;top:0px;z-index:10000;right:7%;width:50%;opacity:0.9;overflow:hidden;background-color:white}
+  .lgpadding{padding:5px}
 }
 @media all and (max-width:480px) {
   .inboxImage{width:20%}
