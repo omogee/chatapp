@@ -204,7 +204,7 @@ const Filechange =(e)=>{
             <div style={{backgroundColor:"#FF6347",display:"flex",width:"100%",padding:"5px 8px",margin:"0"}}>
               <div className="d-md-none" style={{position:"relative",width:"5%"}}>
                <div style={{position:"absolute", top:"30%",color:"white"}}>
-               <a href={`/connections/${ownerid}`} ><span className='fa fa-arrow-left' style={{fontSize:"25px",color:"white"}}></span></a>
+               <a href={`/connections/${ownerid}?display=messages`} ><span className='fa fa-arrow-left' style={{fontSize:"25px",color:"white"}}></span></a>
                </div>
               </div>
                 <div className='inboxImage'>
@@ -253,13 +253,13 @@ const Filechange =(e)=>{
             </div>
             <div ref={refmessage} style={{width:"100%",height:"100%",marginTop:"10px",overflow:"scroll"}}>
               {allmessages.map((message, i) =>
-                 <div className='mr-3 ml-3 mb-2' key={message.time} style={{display:`${(message.sender === ownerid && parseInt(message.reciever) === props.user.userid) || (message.reciever === ownerid && parseInt(message.sender) === props.user.userid) ? "block" : "none"}`}}>
+                 <div className='mr-3 ml-3 mb-2 mt-3' key={message.time} style={{display:`${(message.sender === ownerid && parseInt(message.reciever) === props.user.userid) || (message.reciever === ownerid && parseInt(message.sender) === props.user.userid) ? "block" : "none"}`}}>
                   {i === 0 || getSentTime(message.time) !== getSentTime(allmessages[i > 0 ? i-1 : 0].time) ? 
       <div style={{width:"100%",clear:"both"}}>
       <center>
         <small>
-          <button style={{padding:"2px",border:"1px solid lightgrey",margin:"0px",textTransform:"uppercase",fontWeight:"bold"}}>
-            <small>{getSentTime(message.time)}</small>
+          <button style={{padding:"2px",border:"1px solid lightgrey",marginTop:`${i === 0 ? "0px" : "25px"}`,textTransform:"uppercase",fontWeight:"bold"}}>
+            <small style={{color:"grey"}}>{getSentTime(message.time)}</small>
             </button>
           </small>
       </center>
@@ -281,8 +281,36 @@ const Filechange =(e)=>{
               </div>
               <div style={{backgroundColor:"white",height:"40px", width:"100%"}} ref={hiddenref}></div>
               <div style={{backgroundColor:"white",height:"100px",width:"100%"}}>
-            <div className='messagebox' style={{position:"fixed",bottom:"0",backgroundColor:"white"}}>
-               <form onSubmit={sendmessage}>
+          
+            <div className="inboxinput" style={{position:"fixed",bottom:"0px",backgroundColor:"white",padding:"0px 10px",margin:"0px"}}>
+                   <form onSubmit={sendmessage}>
+                       <div className="input-group mb-3" >
+                       <div className="input-group-prepend">
+                    <button className={`btn `} style={{fontSize:"20px",border:"1px solid lightgrey",borderTopLeftRadius:"20px",borderBottomLeftRadius:"20px",borderRight:"none"}} type="submit">
+                        <span  className="fa fa-smile text-muted"></span>
+                    </button>  
+                     </div>        
+                      <input type="text"  className="form-control form-control-lg navsearch" name='message' ref={inputref} onChange={change} value={message}  placeholder="&#xf044; Type Message" style={{border:"1px solid lightgrey",borderLeft:"0",fontFamily:"FontAwesome",borderRight:"0"}}  />
+                     <div className="input-group-append">
+                    <button style={{border:"1px solid lightgrey",borderTopRightRadius:"20px",borderBottomRightRadius:"20px",borderLeft:"none"}}  type="submit">
+                        <span style={{fontSize:"20px"}} className="fa fa-camera text-muted"></span>
+                    </button>  
+                     </div>
+                     <div className="input-group-append" style={{padding:"5px"}}>
+                    <button type="submit" className={`btn btn-primary`} style={{borderRadius:"40px"}} >
+                        <span style={{color:"white"}} className="fa fa-paper-plane"></span>
+                    </button>  
+                     </div>
+                    </div>
+                     </form>
+                     </div> 
+            </div>
+        </div>
+     );
+}
+/**
+ *   <div className='messagebox' style={{position:"fixed",display:"none",bottom:"0",width:"100%",backgroundColor:"white"}}>
+               <form >
                 <div className='row'>
                   <div className='col-1'>
                     <label for="fileinput">
@@ -303,9 +331,5 @@ const Filechange =(e)=>{
                 </div>
                 </form>
             </div>
-            </div>
-        </div>
-     );
-}
-
+ */
 export default Inbox;

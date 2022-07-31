@@ -44,9 +44,10 @@ const register =()=>{
         </div>
         <div style={{height:"49%",left:"51%",width:"49%",top:"50%",position:"fixed",backgroundRepeat:"no-repeat",backgroundSize:"cover",backgroundImage:`url(${background})`}}>
         </div>
+        <br/><br/><br/><br/><br/><br/>
         <div className='row'  >
               <div className='col-1 col-md-3 col-lg-4'></div>
-              <div className='col-10 col-md-6 col-lg-4' style={{padding:"20px",marginTop:"20%"}}>
+              <div className='col-10 col-md-6 col-lg-4' style={{padding:"20px"}}>
                   <div style={{backgroundColor:"rgba(255,255,255,0.9)",boxShadow:"2px 2px 3px 3px lightgrey",padding:"20px",borderRadius:"5px"}}>
                   <div style={{width:"100%"}}>
                    <div style={{textAlign:"center"}}>
