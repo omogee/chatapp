@@ -202,7 +202,7 @@ const Filechange =(e)=>{
         
             <div style={{position:"sticky",top:"0px",width:"100%",zIndex:"3"}}>
             <div style={{backgroundColor:"#FF6347",display:"flex",width:"100%",padding:"5px 8px",margin:"0"}}>
-              <div className="d-md-none" style={{position:"relative",width:"5%"}}>
+              <div className="d-md-none" style={{position:"relative",width:"7%"}}>
                <div style={{position:"absolute", top:"30%",color:"white"}}>
                <a href={`/connections/${ownerid}?display=messages`} ><span className='fa fa-arrow-left' style={{fontSize:"25px",color:"white"}}></span></a>
                </div>
@@ -297,7 +297,7 @@ const Filechange =(e)=>{
                     </button>  
                      </div>
                      <div className="input-group-append" style={{padding:"5px"}}>
-                    <button type="submit" className={`btn btn-primary`} style={{borderRadius:"40px"}} >
+                    <button type="submit" className={`btn ${message.length > 0 ? "btn-primary" :"btn-warning"}`} style={{borderRadius:"40px"}} >
                         <span style={{color:"white"}} className="fa fa-paper-plane"></span>
                     </button>  
                      </div>

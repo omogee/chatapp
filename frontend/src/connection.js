@@ -30,7 +30,7 @@ function Connection(props) {
           console.log("decryptedData",decryptedData)
           setownerid(parseInt(decryptedData))
           setgroupdetails({ownerid:parseInt(decryptedData)})
-          axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
+          axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
           .then(res => setconn(res.data))
           .catch(err => console.warn(err))
       //    setuserId(params.userId)
@@ -70,12 +70,12 @@ function Connection(props) {
 },[])
 useEffect(()=>{
    socket.on("sending message", data =>{ 
-  axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
+  axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
   .then(res => setconn(res.data))
   .catch(err => console.warn(err))
     })
     socket.on("recieving message", data =>{ 
-      axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
+      axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
       .then(res => setconn(res.data))
       .catch(err => console.warn(err))
         })
@@ -85,12 +85,12 @@ const groupchange =(e)=>{
 }
 const creategroup=()=>{
   const group = JSON.stringify(groupdetails)
-  axios.get(`https://realchatapps.herokuapp.com/create-group?group=${group}`)
+  axios.get(`http://localhost:5000/create-group?group=${group}`)
   .then(res => setgroupresponse(res.data))
   .catch(err=> console.log(err))
 }
 useEffect(()=>{
-  axios.get(`https://realchatapps.herokuapp.com/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
+  axios.get(`http://localhost:5000/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
   .then(res => {
     if( res.data.status === "success"){
       setgroups(res.data.groups)
@@ -111,7 +111,7 @@ const Messages =()=>{
                             <div className='col-3' style={{padding:"5px"}}>
                                 <img style={{borderRadius:"50%",width:"100%",border:"2px solid lightgrey",padding:"5px"}} src={connect.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                             </div>
-                            <div className='col-9' style={{position:"relative"}}>
+                            <div className='col-8' style={{position:"relative"}}>
                                 <div style={{position:"absolute",top:"20%",lineHeight:"1",width:"100%"}}>
                               <a style={{textDecoration:"none"}} href={`/chat/${connect.userid}?display=messages`}><small style={{fontSize:"17px",padding:"0",margin:"0",color:"black"}}>{connect.name}</small> </a>
                                 <small className='mt-1' style={{float:"right",clear:"both",color:"black",marginLeft:"5px"}}>{connect.message ? formatermain(connect.time) : null}</small> 
