@@ -35,7 +35,7 @@ useEffect(()=>{
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   setownerid(decryptedData)
   setuserId(params.userId)
-  axios.get(`http://localhost:5000/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
+  axios.get(`https://realchatapps.herokuapp.com/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
   .then(res => setAllmessages(res.data))
   .catch(err => console.warn(err))
 }

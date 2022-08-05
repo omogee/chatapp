@@ -42,7 +42,7 @@ const connects =(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`http://localhost:5000/connect-user?id=${JSON.stringify(ids)}`)
+    axios.get(`https://realchatapps.herokuapp.com/connect-user?id=${JSON.stringify(ids)}`)
     .then(res => {
         if(res.data.message === "connection removed" && res.data.status ==="success"){
        let  conn = mainconnects 
