@@ -11,6 +11,8 @@ import ChatApp from './chatApp';
 import socket from "./socketconn"
 import Cookies from "js-cookie"
 import Profile from './profile';
+import { userContext, connectContext } from './contextJs';
+import Users from './users';
 
 const CryptoJS = require("crypto-js")
 
@@ -24,6 +26,7 @@ function App() {
   const [typingclients, settypingclients]= useState([])
   const [lastseen, setlastseen] = useState({})
   const [pageurl, setpageurl] = useState("")  
+  const [value, setvalue] = useState("i am the context value man, its better in states")
 
   useEffect(()=>{
     if(Cookies.get("cvyx")){
@@ -31,22 +34,25 @@ function App() {
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
    socket.connect() 
 
-    axios.get(`https://realchatapps.herokuapp.com/fetch-users?id=${decryptedData}`)
+    axios.get(`http://localhost:5000/fetch-users?id=${decryptedData}`)
     .then(res => setusers(res.data))
     .catch(err => console.warn(err))
     
-    axios.get(`https://realchatapps.herokuapp.com/fetch-pendingconnections?requestid=${decryptedData}`)
+    axios.get(`http://localhost:5000/fetch-pendingconnections?requestid=${decryptedData}`)
     .then(res => {
       setrequestedconn(res.data.requestedconn)
       setpendingconn(res.data.pendingconn)
     })
     .catch(err => console.warn(err))
 
-     axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
+     axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
     .then(res => setconnections(res.data))
     .catch(err => console.warn(err))
     }
 },[])
+useEffect(()=>{
+  console.log(value)
+},[value])
 useEffect(()=>{
   socket.on("online users", connectedusers =>{
     console.log("connectedusers",connectedusers)
@@ -120,14 +126,17 @@ useEffect(()=>{
       null
       : <Navbar />
     }
-      <Routes>
-        <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users.length} online={online} users={users}/>} />
+    <userContext.Provider value={{users:[users, setusers], conns:[connects, setconnects]}}>
+      <Routes>  
+       <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users.length} online={online} users={users}/>} />
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
+        <Route exact path="/user" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
         <Route  path="/chat/:userId" element={ <ChatApp users={connections} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
         <Route  path="/connections/:userId" element={/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />
-        <Route exact path="/profile/:userId" element={<Profile />} />
+        <Route exact path="/profile/:userId" element={<Profile />} /> 
       </Routes>
+         </userContext.Provider>
     </Router>
   );
 }

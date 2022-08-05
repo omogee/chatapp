@@ -1,9 +1,10 @@
-import React, { useState, useEffect,useRef} from 'react';
+import React, { useState, useEffect,useRef, useContext} from 'react';
 import background from "./homewallpaper.jpeg"
 import Users from "./users"
 import {useNavigate, useParams} from "react-router-dom"
 import Cookies from "js-cookie"
 import "./main.css"
+import { userContext } from './contextJs';
 
 function Home(props) {
   const [showusers, setShowusers] = useState("none")
@@ -12,9 +13,11 @@ function Home(props) {
   const navigate =useNavigate()
   const isIniRender = useRef(true)
   const params = useParams()
-
+  //for useContext we use curly brackets and not array brackets
+  const {value, setvalue} = useContext(userContext)
 
   useEffect(()=>{
+   // alert(value)
     if(!Cookies.get("cvyx")){
     setredirect(true)
     }
@@ -83,7 +86,7 @@ function Home(props) {
         <div >
           <div style={{position:"fixed",bottom:"10px",right:"10px",zIndex:"100000"}}>
           <button className='btn' style={{borderRadius:"100px",fontWeight:"bold",textTransform:"uppercase",backgroundColor:"indianred",color:"white",fontWeight:"bold"}}>
-            <span className='fa fa-phone'> Contact Us</span>
+            <span className='fa fa-phone' onClick={()=> setvalue("this mf changed me")}></span> Contact Us
           </button>
           </div>
           <div style={{marginTop:"15%",marginBottom:"5%"}}>
@@ -91,7 +94,8 @@ function Home(props) {
             <div className='row' style={{marginTop:"200px"}}>
               <div className='col-12 col-md-7'>
                 <div className='lgpadding'>
-                 <h1>How to start a web design business from scratch</h1>
+                <p></p>
+                 <h1>{value} How to start a web design business from scratch</h1>
                  <p className="observetext_x">Want to start a web design business? Read this informative guide for eight essential steps to consider when building a web design company.<br/>
                  Want to start a web design business? Read this informative guide for eight essential steps to consider when building a web design company.</p>
                  <button className='btn' style={{borderRadius:"100px",textAlign:"left",fontWeight:"bold",textTransform:"uppercase",backgroundColor:"indianred",color:"white"}}>

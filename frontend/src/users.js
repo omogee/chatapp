@@ -3,10 +3,21 @@ import { Link } from 'react-router-dom';
 import socket from "./socketconn"
 import {useNavigate} from "react-router-dom"
 import { formater, formatlastSeen } from './formatTime';
+import axios from 'axios';
+import Cookies from "js-cookie"
+import { userContext } from './contextJs';
+import { useContext } from 'react';
+
+const CryptoJS = require("crypto-js")
 
 function Users(props) {
     const [typingclients, settypingclients] = useState([])
     const [lastmessages,setlastmessages] = useState({})
+     const {users, conns} = useContext(userContext)
+     const [mainusers,setusers] = users
+     const [mainconnects, setconnects] = conns
+
+
       let navigate = useNavigate()
         useEffect(()=>{
        socket.on("typers",(typers)=>{
@@ -25,10 +36,45 @@ function Users(props) {
     //    setlastmessages(prev => ({...prev, [`${sender}/${reciever}`]:data}))
     })
 })
+const connects =(id)=>{
+    if(Cookies.get("cvyx")){
+        var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
+      var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+     let ids ={otheruserid:id, mainuserid:decryptedData}
+     console.log(ids)
+    axios.get(`http://localhost:5000/connect-user?id=${JSON.stringify(ids)}`)
+    .then(res => {
+        if(res.data.message === "connection removed" && res.data.status ==="success"){
+       let  conn = mainconnects 
+       console.log("conn",conn)
+       console.log("connection removed")
+        mainconnects.splice(conn.indexOf(id),1)
+        console.log("spliced conn",conn)
+        setconnects(conn)
+        }else  if(res.data.message === "connection added" && res.data.status ==="success"){
+            let  conn = mainconnects 
+            console.log("connection added")
+            console.log("conn",conn)
+             conn.unshift(id)
+             console.log("unshifted conn",conn)
+             setconnects(conn)
+             }
+    })
+    .catch(err => console.log(err))
+    }
+}
+useEffect(()=>{
+    console.log("mainconnects",mainconnects)
+},[mainconnects])
 console.log("props.lastseen[1]",props.requestedconn,props.pendingconn)
     return ( 
         <div className='container'>
-                      {props.users.map(connect =>
+            <div className='row' style={{marginTop:"80px"}}>
+                <div className='col-12'>
+                    <center><p style={{fontSize:"20px",color:"grey"}}><span className='fa fa-user-o'> </span>({mainusers.length})</p></center>
+                </div>
+            </div>
+                      {mainusers.map(connect =>
                   
                         <div className='row'  key={connect.id} style={{padding:"5px",borderBottom:"0.4px solid lightgrey"}}>
                             <div className='col-3' style={{padding:"5px"}}>
@@ -45,9 +91,17 @@ console.log("props.lastseen[1]",props.requestedconn,props.pendingconn)
                                   </div>
                             </div>
                             <div className="col-2">
-                            <button className={`btn  btn-sm ${props.connects.includes(connect.userid) ? "btn-primary" : null}`} style={{border:"1px solid blue"}}>{props.connects.includes(connect.userid) ? "disconnect" : 
-                            props.pendingconn.includes(connect.userid) ? "pending" :
-                            props.requestedconn.includes(connect.userid) ? "request sent" :  "connect"}</button>
+                             {mainconnects.includes(connect.userid) ?
+                            <button className={`btn  btn-sm btn-primary`} onClick={()=>connects(connect.userid)} style={{border:"1px solid blue"}}> disconnect  </button>
+
+                            : props.pendingconn.includes(connect.userid) ?
+                            <button className={`btn  btn-sm`} style={{border:"1px solid blue"}}>pending</button>
+
+                            : props.requestedconn.includes(connect.userid) ?
+                            <button className={`btn  btn-sm`} style={{border:"1px solid blue"}}>request sent </button>
+                        
+                         : <button className={`btn  btn-sm`} onClick={()=>connects(connect.userid)} style={{border:"1px solid blue"}}>connect </button>
+                             }
                             </div>
                         </div>
                   

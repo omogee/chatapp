@@ -4,8 +4,12 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const path = require("path")    
 const mysql = require("mysql")
-const {AddUser,removeUser, getConnectedUsers, getCurrentUser, addTypingUser, getTypingALLUsers,removeTypingUser} = require("./utils")
 
+
+const multer = require("multer")
+const cloudinary = require("cloudinary")
+const {AddUser,removeUser, getConnectedUsers, getCurrentUser, addTypingUser, getTypingALLUsers,removeTypingUser} = require("./utils")
+require('dotenv').config()
 const app = express()
 
 const server = http.createServer(app);
@@ -30,6 +34,22 @@ const conn = mysql.createPool({
     multipleStatements: true,
    // connectionLimit : 20,  
     waitForConnections : true
+})
+cloudinary.config({
+    cloud_name:process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+  })
+const storage = multer.diskStorage({
+    destination:(req, file, cb)=>{
+        cb(null, "./frontend/uploads")
+    },
+    filename:(req, file,cb)=>{
+        cb(null, Date.now() +"_"+file.originalname)
+    }
+})
+const uploads = multer({
+storage
 })
 io.on("connection", socket =>{
     setInterval(() => {
@@ -233,19 +253,85 @@ app.get("/user/login", (req,res)=>{
             res.json({message:"success", user})
         }
     })
+     
+})
+app.get("/connect-user", (req, res)=>{
+    let id = req.query.id
+    console.log(id)
+    id = JSON.parse(id)
+  const otheruserid= id.otheruserid
+  const mainuserid = id.mainuserid
+  console.log(otheruserid,mainuserid,"hello")
+  const d = new Date()
+  conn.query(`select * from connections where (conn1 =? and conn2 = ?) OR (conn1=? and conn2=?)`,
+  [id.otheruserid,parseInt(id.mainuserid),parseInt(id.mainuserid),id.otheruserid],(err, connected)=>{
+    if (err) throw err;
+    if(connected && connected.length > 0){
+       conn.query(`delete from connections where (conn1 =? and conn2 = ?) OR (conn1=? and conn2=?)`,
+       [id.otheruserid,parseInt(id.mainuserid),parseInt(id.mainuserid),id.otheruserid],(err2, deleted)=>{
+        if(err2) throw err2;
+        console.log("connection removed")
+        if(deleted){
+     res.json({message:"connection removed", status:"success"})
+        }
+    })
+    }else{
+     conn.query("insert into connections (conn1,conn2, conndate, conntime) values (?,?,?,?)",
+     [parseInt(id.mainuserid),id.otheruserid,d.getTime(),d.getTime()], (error, inserted)=>{
+        if (error) throw error;
+        console.log("connection added")
+        if(inserted){
+        res.json({message:"connection added", status:"success"})
+        }
+     })
+    }
+  })
     
 })
-app.post("/user/register", (req,res)=>{
-    const body = JSON.parse(req.body.data)
-    conn.query(`insert into users (name,username, email, gender, contact, password) values (?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,body.contact,body.password],(err, file)=>{
-      if(err){
-          res.json({message:"failed"})
-      }else if(file){
-        res.json({message:"success",data:body})
+app.post("/user/register",uploads.single("files"), (req,res)=>{
+    console.log(req.body.inputs)
+    console.log(req.file)
+    const body = JSON.parse(req.body.inputs)
+    conn.query("select * from users where email =? ",[body.email],(err, user)=>{
+        if (err) throw err;
+        if(user && user.length > 0){
+            console.log("email is taken")
+            res.json({status:"failed", message:"This Email is not available"})
+        }else{
+    if(req.file){
+        cloudinary.v2.uploader.upload(
+            req.file.path,
+            {
+                folder:"chatapp/profilepicture"
+            },
+            (error, result)=>{
+                if (error) throw error;
+                const image = `${result.original_filename}.${result.original_extension}`
+                conn.query(`insert into users (name,username, email, gender,image, contact, password) values (?,?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,image,body.contact,body.password],(err, file)=>{
+                    if(err){ 
+                        res.json({status:"failed"})
+                    }else if(file){
+                      res.json({status:"success",data:body})
+                  }else{
+                      res.json({status:"failed"})
+                  }
+                  })
+            }
+        )
     }else{
-        res.json({message:"failed"})
+    conn.query(`insert into users (name,username, email, gender, contact, password) values (?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,body.contact,body.password],(err, file)=>{
+      if(err){ 
+          res.json({status:"failed"})
+      }else if(file){
+        res.json({status:"success",data:body})
+    }else{
+        res.json({status:"failed"})
     }
+
     })
+}
+}
+})
 })
 if(process.env.NODE_ENV === "production"){ 
     app.use(express.static("frontend/build"))
