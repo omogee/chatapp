@@ -4,7 +4,7 @@ import Users from "./users"
 import {useNavigate, useParams} from "react-router-dom"
 import Cookies from "js-cookie"
 import "./main.css"
-import { userContext } from './contextJs';
+import { userContext,connectContext } from './contextJs';
 
 function Home(props) {
   const [showusers, setShowusers] = useState("none")
@@ -95,7 +95,7 @@ function Home(props) {
               <div className='col-12 col-md-7'>
                 <div className='lgpadding'>
                 <p></p>
-                 <h1>{value} How to start a web design business from scratch</h1>
+                 <h1> How to start a web design business from scratch</h1>
                  <p className="observetext_x">Want to start a web design business? Read this informative guide for eight essential steps to consider when building a web design company.<br/>
                  Want to start a web design business? Read this informative guide for eight essential steps to consider when building a web design company.</p>
                  <button className='btn' style={{borderRadius:"100px",textAlign:"left",fontWeight:"bold",textTransform:"uppercase",backgroundColor:"indianred",color:"white"}}>

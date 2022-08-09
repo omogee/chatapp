@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useContext} from 'react';
 import Connection from './connection';
 import Inbox from './inbox';
 import axios from "axios"
 import Cookies from "js-cookie"
 import Login from "./login"
 import {useParams} from "react-router-dom"
+import { userContext } from './contextJs';
 const CryptoJS = require("crypto-js")
 
 function ChatApp(props) {
     const [user,setuser] = useState({})
     const [users, setusers] = useState([ ])
     const [redirect,setredirect] =useState(false)
+    
     const querystring = new URLSearchParams(window.location.search)
     const params = useParams()
   useEffect(()=>{
@@ -25,10 +27,10 @@ function ChatApp(props) {
         var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   
-   axios.get(`https://realchatapps.herokuapp.com/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
+   axios.get(`http://localhost:5000/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
    .then(res => {
        if(res.data.length === 0 || !res.data){
-      setredirect(true)
+  //    setredirect(true)
        }else{
            setuser(res.data[0])
        }
@@ -47,7 +49,7 @@ function ChatApp(props) {
                     <Connection conn={props.users} typingclients={props.typingclients} online={props.online} />
                 </div>
                 <div className='col-12 col-md-8' style={{height:"100vh",border:"1px solid lightgrey",overflow:"auto",adding:"0",margin:"0",padding:"0",width:"100%"}} >
-                <Inbox  online={props.online} lastseen={props.lastseen} user={user}/>
+                <Inbox  online={props.online} connects={props.connects} lastseen={props.lastseen} user={user}/>
                 </div>
             </div>
         </div>

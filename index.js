@@ -4,7 +4,7 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const path = require("path")    
 const mysql = require("mysql")
-
+const fs = require("fs")
 
 const multer = require("multer")
 const cloudinary = require("cloudinary")
@@ -40,6 +40,7 @@ cloudinary.config({
     api_key: process.env.API_KEY,
     api_secret: process.env.API_SECRET
   })
+  const d= new Date()
 const storage = multer.diskStorage({
     destination:(req, file, cb)=>{
         cb(null, "./frontend/uploads")
@@ -49,13 +50,24 @@ const storage = multer.diskStorage({
     }
 })
 const uploads = multer({
-storage
+storage,
+// limits: { fileSize: 1 * 1024 * 1024 }, // 1MB
+fileFilter: (req, file, cb) => {
+    if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+        cb(null, true);
+    } else {
+        cb(null, false);
+        const err = new Error('Only .png, .jpg and .jpeg format allowed!')
+        err.name = 'ExtensionError'
+        return cb(err);
+    }
+}
 })
 io.on("connection", socket =>{
     setInterval(() => {
         socket.emit("ping")
         console.log('pong')
-    }, (20000));
+    }, (100000));
 
     socket.on("addUser", id =>{
         const user = AddUser({userId:id,socketId:socket.id})
@@ -211,17 +223,12 @@ app.get("/fetch-users",(req,res)=>{
         res.send(users)
     })
 })
-app.get("/fetch-pendingconnections",(req,res)=>{
-    conn.query("select conn2 from pendingconnections where conn1 =?",[req.query.requestid],(err, requestedconn)=>{
-        if (err) throw err;
-        conn.query("select conn1 from pendingconnections where conn2 =?",[req.query.requestid],(err, pendingconn)=>{
-            if (err) throw err;
-            console.log("requested",{pendingconn,requestedconn})
-        res.json({pendingconn,requestedconn})
-        })
-    })
-})
+
 app.get("/fetch-connections",(req,res)=>{
+    conn.query("select conn2 from pendingconnections where conn1 =?",[req.query.id],(err, pendingconn)=>{
+        if (err) throw err;
+        conn.query("select conn1 from pendingconnections where conn2 =?",[req.query.id],(err, requestedconn)=>{
+            if (err) throw err;
     conn.query(`SELECT 
     *
 FROM
@@ -233,13 +240,52 @@ FROM
         if (err) throw err;
    
       //  console.log(connections) ON connections.conn1 = users.userid or connections.conn2 = users.userid  where users.userid !=
-        res.send(connections)
+      res.json({pendingconn,requestedconn,connections})
+    })
+})
+    })
+})
+app.post("/change-profilepic", uploads.single("files"), (req,res)=>{
+    cloudinary.v2.uploader.upload(
+        req.file.path,
+        {folder: "chatapp/profilepicture"},
+        (error,result)=>{
+            if (error) throw err;
+            const image = `${result.original_filename}.${result.original_extension}`
+            conn.query("update users set image = ? where userid =?",[image, req.body.id],(err, updated)=>{
+                if (err) throw err;
+                if(updated){
+                    console.log("profile pic done", image)
+                    res.json({status:"success"})
+                }
+            })
+        }
+    )
+})
+app.get("/fetch-userprofile",(req,res)=>{
+    conn.query("select * from users inner join uploads on users.userid=uploads.userid where users.userid =?",[req.query.id],(err, users)=>{
+        if (err) throw err;
+       if(users.length > 0){
+        res.send(users)
+       }else{
+        conn.query("select * from users where userid=? ",[req.query.id],(err, justuser)=>{
+            if (err) throw err;
+            res.send(justuser)
+        })
+       }
     })
 })
 app.get("/fetch-user",(req,res)=>{
     conn.query("select * from users inner join connections  on users.userid = connections.conn1 or users.userid=connections.conn2  where  (connections.conn1=? and connections.conn2=? and users.userid=? ) or (connections.conn1=? and connections.conn2=? and users.userid=? )",[req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.inboxuserId],(err, users)=>{
         if (err) throw err;
+    if(users.length > 0){
         res.send(users)
+    }else{
+        conn.query("select * from users where userid=? ",[req.query.inboxuserId],(err, justuser)=>{
+            if (err) throw err;
+            res.send(justuser)
+        })
+    }
     })
 })
 app.get("/user/login", (req,res)=>{
@@ -255,13 +301,27 @@ app.get("/user/login", (req,res)=>{
     })
      
 })
+app.get("/accept-pendingrequests", (req, res)=>{
+    let id = req.query.id
+    id = JSON.parse(id)
+  const d = new Date()
+  conn.query(`delete from pendingconnections where conn1=? and conn2 =?`,[id.otheruserid,parseInt(id.mainuserid)],
+  (err, deleted)=>{
+    if (err) throw err;
+    if (deleted){
+        conn.query(`insert into connections (conn1,conn2, conndate, conntime) values (?,?,?,?)`,
+        [id.otheruserid,parseInt(id.mainuserid),d.getTime(),d.getTime()],(err, inserted)=>{
+          if (err) throw err;
+          if(inserted){       
+           res.json({message:"connection added", status:"success"})
+              }
+      })
+    }
+  })
+})
 app.get("/connect-user", (req, res)=>{
     let id = req.query.id
-    console.log(id)
     id = JSON.parse(id)
-  const otheruserid= id.otheruserid
-  const mainuserid = id.mainuserid
-  console.log(otheruserid,mainuserid,"hello")
   const d = new Date()
   conn.query(`select * from connections where (conn1 =? and conn2 = ?) OR (conn1=? and conn2=?)`,
   [id.otheruserid,parseInt(id.mainuserid),parseInt(id.mainuserid),id.otheruserid],(err, connected)=>{
@@ -276,21 +336,114 @@ app.get("/connect-user", (req, res)=>{
         }
     })
     }else{
-     conn.query("insert into connections (conn1,conn2, conndate, conntime) values (?,?,?,?)",
-     [parseInt(id.mainuserid),id.otheruserid,d.getTime(),d.getTime()], (error, inserted)=>{
+        conn.query("select * from connections where (conn1 =? and conn2 = ?) OR (conn1=? and conn2=?)",
+        [id.otheruserid,parseInt(id.mainuserid),parseInt(id.mainuserid),id.otheruserid],(err, connected)=>{
+            if (err) throw err;
+            if (connected && connected.length > 0){
+                res.json({message:"connection request already exist", status:"failed"})
+            }
+            else{
+     conn.query("insert into pendingconnections (conn1,conn2, connstatus, date) values (?,?,?,?)",
+     [parseInt(id.mainuserid),id.otheruserid,"pending",d.getTime()], (error, inserted)=>{
         if (error) throw error;
-        console.log("connection added")
+        console.log("connection request sent")
         if(inserted){
-        res.json({message:"connection added", status:"success"})
+        res.json({message:"connection request sent", status:"success"})
         }
      })
     }
-  })
-    
+    })
+    }
+  })  
+})
+app.get("/remove-request", (req,res)=>{
+    let id = req.query.id
+    id = JSON.parse(id)
+  const d = new Date()
+  conn.query(`delete from pendingconnections where (conn1 =? and conn2 = ?)`,
+  [parseInt(id.mainuserid),id.otheruserid],(err, deleted)=>{
+   if(err) throw err;
+   console.log("pendingconnection removed")
+   if(deleted){
+res.json({message:"pendingconnection removed", status:"success"})
+   }
+})
+})
+app.get("/like-post",(req, res)=>{
+    console.log(req.query.id, req.query.uploadid)
+    conn.query("select likes from uploads where uploadid =?",[req.query.uploadid],(err, likes)=>{
+        if (err) throw err;
+     if(likes){
+     let prevlikes =  JSON.parse(likes[0].likes)
+        if(prevlikes.includes(req.query.id) || prevlikes.includes(parseInt(req.query.id))){
+         prevlikes = prevlikes.filter(prev => prev != (req.query.id))
+         console.log("its included", prevlikes)
+         conn.query("update uploads set likes = ? where uploadid =?",[JSON.stringify(prevlikes), req.query.uploadid],(err, updated)=>{
+            if (err) throw err;
+            if(updated){
+                res.json({status:"success"})
+            }
+         })
+        }else{
+        prevlikes = [...prevlikes, parseInt(req.query.id)]
+       // prevlikes.push(parseInt(req.query.id))
+         console.log("its not included", prevlikes)
+         conn.query("update uploads set likes = ? where uploadid =?",[JSON.stringify(prevlikes), req.query.uploadid],(err, updated)=>{
+            if (err) throw err;
+            if(updated){
+                res.json({status:"success"})
+            }
+         })
+        }
+     }
+    })
+})
+app.get("/fetch-uploads", (req,res)=>{
+    conn.query(`select * from uploads inner join users on users.userid=uploads.userid order by uploadid desc`, (err, uploads)=>{
+        if (err) throw err;
+        res.send(uploads)
+    })
+})
+app.post("/upload-post",uploads.array("files"),async (req,res)=>{
+    const uploader = async path => 
+     new Promise(resolve => {
+     cloudinary.uploader.upload(path, (result) => {
+        resolve({
+            url: result.url,
+            id: result.public_id
+        })
+    }, {
+        resource_type: "auto",
+        folder: "/chatapp/uploads"
+    })
+})
+    const mainImages =[]
+    const urls = []
+    const files = req.files || req.file
+    for(var i=0; i < files.length; i++){
+        const {path} = files[i]
+        console.log(files[i])
+        const newPath = await uploader(path)
+        urls.push(newPath)   
+        fs.unlinkSync(path)
+        mainImages.push(files[i].filename)
+        } 
+        const body = req.body
+        console.log(body)
+        console.log(JSON.stringify(mainImages)) 
+    const d = new Date()
+    conn.query(`insert into uploads (userid, imgs,caption,likes, dislikes,date, time) values (?,?,?,?,?,?,?)`,[body.id, JSON.stringify(mainImages),body.caption,"[]","[]",d.getTime(),d.getTime()],(err, inserted)=>{
+        if (err) throw err;
+        if (inserted){
+            console.log("upload done")
+            res.json({status:"success", message:"uploaded successfully"})
+        }else{
+            console.log("couldnt upload")
+            res.json({status:"failed", message:"uploaded failed, an error occured"})
+        }
+    })
 })
 app.post("/user/register",uploads.single("files"), (req,res)=>{
-    console.log(req.body.inputs)
-    console.log(req.file)
     const body = JSON.parse(req.body.inputs)
     conn.query("select * from users where email =? ",[body.email],(err, user)=>{
         if (err) throw err;

@@ -41,6 +41,7 @@
   .usersdiv{
     left:30%;top:15%;width:35%;
   }
+  .contain{padding:0px 300px}
   @media all and (max-width: 1200px) and (min-width:992px){
     .messagebox{
       width:50%
@@ -48,6 +49,7 @@
     .usersdiv{
       left:30%;top:15%;width:40%;
     }
+    .contain{padding:0px 200px} 
   }
   @media all and (max-width: 992px)  and (min-width:768px){
     .messagebox{
@@ -56,6 +58,7 @@
     .usersdiv{
       left:30%;top:15%;width:40%;
     }
+    .contain{padding:0px 100px}
   }
   @media all and (max-width: 768px) and (min-width:550px){
     .messagebox{
@@ -64,6 +67,7 @@
     .usersdiv{
       left:25%;top:15%;width:50%;
     }
+    .contain{padding:0px 0px}
   }
   @media all and (max-width: 550px){
     .messagebox{
@@ -72,4 +76,5 @@
     .usersdiv{
       left:5%;top:15%;width:90%;
     }
+    .contain{padding:0px 0px}
   }

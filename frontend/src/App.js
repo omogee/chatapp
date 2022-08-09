@@ -13,6 +13,8 @@ import Cookies from "js-cookie"
 import Profile from './profile';
 import { userContext, connectContext } from './contextJs';
 import Users from './users';
+import Inbox from './inbox';
+import Uploads from './upload';
 
 const CryptoJS = require("crypto-js")
 
@@ -34,25 +36,28 @@ function App() {
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
    socket.connect() 
 
-    axios.get(`https://realchatapps.herokuapp.com/fetch-users?id=${decryptedData}`)
+    axios.get(`http://localhost:5000/fetch-users?id=${decryptedData}`)
     .then(res => setusers(res.data))
     .catch(err => console.warn(err))
-    
-    axios.get(`https://realchatapps.herokuapp.com/fetch-pendingconnections?requestid=${decryptedData}`)
+    /*
+    axios.get(`http://localhost:5000/fetch-pendingconnections?requestid=${decryptedData}`)
     .then(res => {
+      console.log("res.data", res.data.requestedconn, res.data.pendingconn)
       setrequestedconn(res.data.requestedconn)
       setpendingconn(res.data.pendingconn)
     })
     .catch(err => console.warn(err))
-
-     axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
-    .then(res => setconnections(res.data))
+*/
+     axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
+    .then(res => {
+      setrequestedconn(res.data.requestedconn)
+      setpendingconn(res.data.pendingconn)
+      setconnections(res.data.connections)
+    })
     .catch(err => console.warn(err))
     }
 },[])
-useEffect(()=>{
-  console.log(value)
-},[value])
+
 useEffect(()=>{
   socket.on("online users", connectedusers =>{
     console.log("connectedusers",connectedusers)
@@ -83,7 +88,7 @@ socket.on("lastseen", data=>{
 socket.on("disconnected",()=>{
   setTimeout(()=>{
     socket.connect()
-  }, 2000)
+  }, 100000)
 })
 })
 useEffect(()=>{
@@ -94,28 +99,35 @@ useEffect(()=>{
   })
 },[])
 useEffect(()=>{
+  let pending =[]
+  pendingconn.forEach(conn =>{
+    console.log("pending......", conn.conn2)
+    pending.push(parseInt(conn.conn2))
+   })
+   setpendingconn(pending)
+},[connections])
+useEffect(()=>{
   let connect =[]
 let requested=[]
-let pending =[]
+
   if(Cookies.get("cvyx")){
    var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-  requestedconn.map(conn =>{
-    console.log("conn2",conn.conn2)
-    requested.push(parseInt(conn.conn2))
-   })
-   pendingconn.map(conn =>{
-    pending.push(parseInt(conn.conn1))
-   })
- setpendingconn(pending)
- setrequestedconn(requested)
-   
-  connections.map(conn =>{
+  requestedconn.forEach(conn =>{
+    console.log("conn1", conn.conn1)
+    requested.push(parseInt(conn.conn1))
+   }) 
+  
+  connections.forEach(conn =>{
      connect.push(conn.userid)
   })
+  console.log("requested", requested)
   setconnects(connect)
+ 
+  setrequestedconn(requested)
   }
 },[connections])
+
 useEffect(()=>{
   setpageurl(window.location.pathname)
 },[])
@@ -126,15 +138,17 @@ useEffect(()=>{
       null
       : <Navbar />
     }
-    <userContext.Provider value={{users:[users, setusers], conns:[connects, setconnects]}}>
+    <userContext.Provider value={{users:[users, setusers], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
       <Routes>  
        <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users.length} online={online} users={users}/>} />
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
         <Route exact path="/user" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
-        <Route  path="/chat/:userId" element={ <ChatApp users={connections} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
+        <Route  path="/chat/:userId" element={ <ChatApp users={connections} connects={connects} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
+        <Route  path="/inbox/:userId" element={ <Inbox users={connections} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
         <Route  path="/connections/:userId" element={/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />
         <Route exact path="/profile/:userId" element={<Profile />} /> 
+        <Route exact path="/uploads" element={<Uploads />} />
       </Routes>
          </userContext.Provider>
     </Router>

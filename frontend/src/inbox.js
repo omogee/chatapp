@@ -1,10 +1,11 @@
-import React, { useState, useEffect ,useRef} from 'react';
+import React, { useState, useEffect ,useRef, useContext} from 'react';
 import socket from "./socketconn"
 import Cookies from "js-cookie"
 import axios from "axios"
 import Login from "./login"
 import {useParams} from "react-router-dom"
 import { formater, formatlastSeen, getSentTime } from './formatTime';
+import { userContext } from './contextJs';
  import "./main.css"
  import "./index.css"
 const CryptoJS = require("crypto-js")
@@ -18,6 +19,8 @@ function Inbox(props) {
     const [displayheight,setdisplayheight] =useState("0px")
     const [message, setmessage] = useState("")
     const [allmessages, setAllmessages] =useState([])
+   
+
     const querystring = new URLSearchParams(window.location.search)
     const [user,setuser] = useState({})
     const [userId, setuserId] = useState(querystring.get("userId"))
@@ -35,15 +38,17 @@ useEffect(()=>{
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   setownerid(decryptedData)
   setuserId(params.userId)
-  axios.get(`https://realchatapps.herokuapp.com/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
+  axios.get(`http://localhost:5000/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
   .then(res => setAllmessages(res.data))
   .catch(err => console.warn(err))
 }
  hiddenref.current.scrollIntoView({behavior:"smooth"})
 },[params])
 useEffect(()=>{
+  if(refmessage.current && allmessages.length > 0){
   refmessage.current.scrollTop =  refmessage.current.scrollHeight;
   hiddenref.current.scrollIntoView({behavior:"smooth"})
+  }
 },[allmessages])
  const scrollToTop =()=>{
   //  alert("re-arranging")
@@ -197,6 +202,7 @@ const Filechange =(e)=>{
                 </div>
             </div>
  */
+
     return ( 
         <div  style={{width:"100%",padding:"0",margin:"0",position:"static"}}>
         
@@ -247,10 +253,9 @@ const Filechange =(e)=>{
                 </div>
              )}
                 </div>
-
-
             </div>
             </div>
+            {props.user.userid &&  props.connects.includes(props.user.userid) ? 
             <div ref={refmessage} style={{width:"100%",height:"100%",marginTop:"10px",overflow:"scroll"}}>
               {allmessages.map((message, i) =>
                  <div className='mr-3 ml-3 mb-2 mt-3' key={message.time} style={{display:`${(message.sender === ownerid && parseInt(message.reciever) === props.user.userid) || (message.reciever === ownerid && parseInt(message.sender) === props.user.userid) ? "block" : "none"}`}}>
@@ -279,6 +284,11 @@ const Filechange =(e)=>{
                  </div>
                 )}
               </div>
+
+              : <div style={{width:"100%",height:"100%",marginTop:"10px",overflow:"scroll"}}>
+                <p style={{textAlign:"center",color:"red"}}>You Cannot send messages to this user</p><br/>
+                <p>Click Here to connect with this @{props.user.username}</p>
+                </div>}
               <div style={{backgroundColor:"white",height:"40px", width:"100%"}} ref={hiddenref}></div>
               <div style={{backgroundColor:"white",height:"100px",width:"100%"}}>
           
