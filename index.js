@@ -262,9 +262,40 @@ app.post("/change-profilepic", uploads.single("files"), (req,res)=>{
         }
     )
 })
+app.get("/follow-user", (req, res)=>{
+    conn.query("select followers from users where userid =?",[req.query.otheruser],(err, followers)=>{
+        if (err) throw err;
+     if(followers){
+     let prevfollowers =  JSON.parse(followers[0].followers)
+        if(prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseInt(req.query.mainuser))){
+         prevfollowers = prevfollowers.filter(prev => prev != parseInt(req.query.mainuser))
+         console.log("its included", prevfollowers)
+         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updated)=>{
+            if (err) throw err;
+            console.log("unfollowed")
+            if(updated){
+                res.json({status:"success",followers:prevfollowers})
+            }
+         })
+        }else{
+        prevfollowers = [...prevfollowers, parseInt(req.query.mainuser)]
+       // prevfollowers.push(parseInt(req.query.id))
+         console.log("its not included", prevfollowers)
+         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updated)=>{
+            if (err) throw err;
+            console.log("followed")
+            if(updated){
+                res.json({status:"success", followers:prevfollowers})
+            }
+         })
+        }
+     }
+    })
+})
 app.get("/fetch-userprofile",(req,res)=>{
     conn.query("select * from users inner join uploads on users.userid=uploads.userid where users.userid =?",[req.query.id],(err, users)=>{
         if (err) throw err;
+      //  console.log(users)
        if(users.length > 0){
         res.send(users)
        }else{
@@ -381,7 +412,7 @@ app.get("/like-post",(req, res)=>{
          conn.query("update uploads set likes = ? where uploadid =?",[JSON.stringify(prevlikes), req.query.uploadid],(err, updated)=>{
             if (err) throw err;
             if(updated){
-                res.json({status:"success"})
+                res.json({status:"success",likes:prevlikes})
             }
          })
         }else{
@@ -391,7 +422,7 @@ app.get("/like-post",(req, res)=>{
          conn.query("update uploads set likes = ? where uploadid =?",[JSON.stringify(prevlikes), req.query.uploadid],(err, updated)=>{
             if (err) throw err;
             if(updated){
-                res.json({status:"success"})
+                res.json({status:"success", likes:prevlikes})
             }
          })
         }

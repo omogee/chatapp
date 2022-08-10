@@ -10,6 +10,7 @@ function Uploads() {
     const [display, setdisplay] = useState("none")
     const [mainuser, setmainuser] = useState("")
     const  [images, setimages] = useState([])
+    const [tempolikes, settempolikes] = useState({})
     const [files, setfiles] = useState([])
     const [caption, setcaption] = useState("")
   
@@ -65,10 +66,17 @@ function Uploads() {
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
         axios.get(`http://localhost:5000/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
-        .then(res => console.log("res.data",res.data))
+        .then(res =>{ 
+            if(res.data.status === "success"){
+      settempolikes({...tempolikes, [`${uploadid}`]:res.data.likes})
+        }
+    })
         .catch(err => console.log(err))
         }
     }
+    useEffect(()=>{
+        console.log(tempolikes)
+    },[tempolikes])
 const uploadpost =()=>{
     
     if(Cookies.get("cvyx") ){ 
@@ -141,9 +149,9 @@ const removeImage=(img,index)=>{
          <div className='container contain' style={{margin:"80px 0px"}}>
          <div style={{display:`${display}`}}>
                 <br/>
-            <div style={{backgroundColor:"white",marginBottom:"10px",padding:"20px",borderRadius:"20px"}}>
+            <div  style={{position:"relative",backgroundColor:"white",marginBottom:"10px",padding:"20px",borderRadius:"20px"}}>
              <div style={{position:"absolute",right:"5px",top:'5px'}}>
-              <span className='fa fa-times ' style={{fontSize:"25px"}}></span>
+              <span className='fa fa-times text-muted' onClick={()=> setdisplay("none")} style={{fontSize:"30px",fontWeight:"lighter"}}></span>
              </div>
              <div style={{display:"flex",flexWrap:"wrap"}}>
                 {images.length > 0 ? images.map((img,index) => 
@@ -180,7 +188,7 @@ const removeImage=(img,index)=>{
            <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",border:"1px solid lightgrey"}} key={upload.id}>
             <div style={{display:"flex",width:"100%",flexWrap:"nowrap"}}>
                 <div style={{width:"11%",padding:"5px"}}>
-                    <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${upload.image}`} style={{width:"100%",borderRadius:"50%",height:"50px"}}/>
+                    <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${upload.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
                 <div style={{width:"70%"}}>
                   <a href={`/profile/${upload.userid}`} style={{textDecoration:"none"}}> <small style={{fontWeight:"bold",color:"black"}}>{upload.name}</small></a><br/>
@@ -204,16 +212,25 @@ const removeImage=(img,index)=>{
                 </div>
                 <div style={{display:"flex",width:"100%", justifyContent:"space-between"}}>
                     <div className='ml-3' style={{width:"20%",padding:"5px"}}>
-                        <span className={upload.likes && JSON.parse(upload.likes).includes(mainuser) ? 'fa fa-thumbs-up text-primary' : 'fa fa-thumbs-o-up text-primary'} onClick={()=>like(upload.uploadid)} style={{fontSize:"20px"}}></span>
-                         <small style={{fontSize:"18px"}} className={upload.likes && JSON.parse(upload.likes).includes(mainuser) ? "text-primary ml-1" : "text-muted ml-1"}>{upload.likes && JSON.parse(upload.likes).length}</small>
+                        <span className={tempolikes[`${upload.uploadid}`] && tempolikes[`${upload.uploadid}`].includes(parseInt(mainuser)) ? 'fa fa-thumbs-up text-primary' : upload.likes && JSON.parse(upload.likes).includes(parseInt(mainuser)) ? 'fa fa-thumbs-up text-primary' : 'fa fa-thumbs-o-up text-primary'} onClick={()=>like(upload.uploadid)} style={{fontSize:"20px"}}></span>
+                         <small style={{fontSize:"18px"}} className={tempolikes[`${upload.uploadid}`] && tempolikes[`${upload.uploadid}`].includes(parseInt(mainuser)) ? "text-primary ml-1" :upload.likes && JSON.parse(upload.likes).includes(parseInt(mainuser)) ? "text-primary ml-1" : "text-muted ml-1"}>{tempolikes[`${upload.uploadid}`] && tempolikes[`${upload.uploadid}`].length || upload.likes && JSON.parse(upload.likes).length}</small>
                     </div>
                     <div style={{width:"20%"}}>
-                    <span className='ml-3 fa fa-heart-o' style={{fontSize:"20px",color:"red"}}></span> <small style={{fontSize:"18px"}}>{upload.likes && JSON.parse(upload.likes).length}</small>
+                    <span className='ml-3 fa fa-comment-o' style={{fontSize:"20px",color:"red"}}></span> <small style={{fontSize:"18px"}}>{upload.likes && JSON.parse(upload.likes).length}</small>
                     </div>
                 
              </div>
+             
+             <div style={{display:"flex",padding:"20px"}}>
+                <div style={{width:"100%"}}>
+                    <textarea className='form-control' placeholder={"Be the first to comment"}></textarea><br/>
+                    <button className='btn btn-primary'>submit</button><div>
            </div>
-           
+           </div>
+
+
+           </div>
+           </div>
             ) : 
             <div style={{backgroundColor:"white",width:"100%"}}>
             <center>
