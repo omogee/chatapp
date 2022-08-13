@@ -45,7 +45,7 @@ const connects =(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`http://localhost:5000/connect-user?id=${JSON.stringify(ids)}`)
+    axios.get(`https://realchatapps.herokuapp.com/connect-user?id=${JSON.stringify(ids)}`)
     .then(res => {
         if(res.data.message === "connection removed" && res.data.status ==="success"){
        console.log("connection removed")
@@ -65,7 +65,7 @@ const acceptconnect =(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`http://localhost:5000/accept-pendingrequests?id=${JSON.stringify(ids)}`)
+    axios.get(`https://realchatapps.herokuapp.com/accept-pendingrequests?id=${JSON.stringify(ids)}`)
     .then(res => {
          if(res.data.message === "connection added" && res.data.status ==="success"){
             setrequestedconn(mainrequestedconn.filter(reqconn => reqconn !== id))
@@ -81,7 +81,7 @@ const removerequest=(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`http://localhost:5000/remove-request?id=${JSON.stringify(ids)}`)
+    axios.get(`https://realchatapps.herokuapp.com/remove-request?id=${JSON.stringify(ids)}`)
     .then(res => {
          if(res.data.message === "pendingconnection removed" && res.data.status ==="success"){
            setpendingconn(mainpendingconn.filter(pendconn => pendconn !== id))

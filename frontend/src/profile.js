@@ -18,6 +18,9 @@ function Profile() {
     const [file, setfile] = useState({})
     const [fullprofile, setfullprofile] = useState([])
     const [tempolikes, settempolikes] = useState({})
+    const [tempofollowers, settempofollowers] = useState(null)
+    const [successmsg, setsuccessmsg] = useState("0")
+    const [failuremsg, setfailuremsg] = useState("0")
     const [uploadbtn,setuploadbtn] = useState("none")
 
 
@@ -27,12 +30,11 @@ function Profile() {
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
            setuserid(decryptedData)
-       axios.get(`http://localhost:5000/fetch-userprofile?id=${parseInt(params.userId)}`)
+       axios.get(`https://realchatapps.herokuapp.com/fetch-userprofile?id=${parseInt(params.userId)}`)
        .then(res => {
            if(res.data.length === 0 || !res.data){
           setredirect(true)
            }else{
-               console.log(res.data)
                setuser(res.data[0])
                setfullprofile(res.data)
            }
@@ -54,54 +56,74 @@ function Profile() {
           const formdata = new FormData()
           formdata.append("id", userid)
           formdata.append("files",file)
-          axios.post("http://localhost:5000/change-profilepic", formdata)
+          axios.post("https://realchatapps.herokuapp.com/change-profilepic", formdata)
           .then(res => {
             if(res.data.status === "success"){
+              setsuccessmsg("1")
+              setTimeout(()=>{
+               setsuccessmsg("0")
+              }, 3000)
               setuploadbtn("none")
+            }else{
+              setfailuremsg("1")
+              setTimeout(()=>{
+                setfailuremsg("0")
+               }, 3000)
             }
           })
           .catch(err => console.log(err))
         }  
         }
          const follow =(otheruser)=>{
-          axios.get(`http://localhost:5000/follow-user?mainuser=${userid}&&otheruser=${params.userId}`)
-          .then(res => console.log(res.data))
+          axios.get(`https://realchatapps.herokuapp.com/follow-user?mainuser=${userid}&&otheruser=${params.userId}`)
+          .then(res => {
+            if(res.data.status === "success"){
+              settempofollowers(res.data.followers)
+              console.log("tempofollowers",tempofollowers)
+              }
+          })
           .catch(err => console.log(err))
          }
         const like =(uploadid)=>{
           if(Cookies.get("cvyx") ){ 
               var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
             const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-          axios.get(`http://localhost:5000/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
-          .then(res =>  settempolikes({...tempolikes, [`${uploadid}`]:res.data.likes}))
+          axios.get(`https://realchatapps.herokuapp.com/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
+          .then(res =>  {
+            settempolikes({...tempolikes, [`${uploadid}`]:res.data.likes})
+            
+          })
           .catch(err => console.log(err))
           }
       }
     return (
-        <div >
-        <div style={{width:"100%",backgroundColor:"white"}}></div>
-        <div className='container' >
+        <div style={{backgroundColor:"lightgrey"}}>
+        <div className='container'>
             <br/><br/><br/><br/>
-                   <div className='row'>
+                   <div className='row' style={{padding:"5px"}}>
                    <div className='d-none d-md-block col-md-2'></div>
-                   <div className='col-12 col-md-4' style={{backgroundColor:"white",padding:"30px",boxShadow:"2px 2px 3px 3px lightgrey",borderRadius:"30px",textAlign:"center"}}>
+                   <div className='col-12 col-md-4' style={{backgroundColor:"white",padding:"30px",borderLeftBottomRadius:"30px",borderLeftTopRadius:"30px",textAlign:"center"}}>
                    <div style={{position:"absolute",right:"20%",top:'50px'}}>
                     {parseInt(params.userId) === parseInt(userid) ?
-           <label htmlFor='profileimage'>
-           <span className='fa fa-pencil-square fa-2x' style={{color:"orange"}}></span>
+           <label htmlFor='profileimage' style={{backgroundColor:"white",padding:"6px",borderRadius:"10px",border:"2px solid lightgrey"}}>
+          <small style={{color:"orange"}}> <span className='fa fa-camera fa-2x' style={{color:"orange"}}></span> Edit</small>
            </label>
            : null}
              </div>
                     <img style={{width:"100%",borderRadius:"50%",padding:"20px",height:"250px",boxShadow:"2px 2px 5px 3px lightgrey"}} src={newImage.length > 0 ? newImage : user.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${user.image}` : user && user.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                   <div style={{display:"flex",padding:"0px",margin:"0"}}>
-                    <div style={{width:"80%",padding:"0",margin:"0"}}>
+                    <div style={{width:"20%",padding:"0",margin:"0"}}>
                     <input type="file" style={{visibility:"hidden"}} name="profileimage" id="profileimage" onChange={filechange} />
                     </div>
-                    <div style={{width:"20%"}}>
-                      <button style={{display:`${uploadbtn}`}} onClick={changeImage} className='btn btn-primary'>Upload</button>
+                    <div style={{width:"60%",padding:"0",margin:"0"}}>
+                      <small className='upload-success' style={{color:"green",transition:"opacity 2s",opacity:`${successmsg}`,fontWeight:"bold"}}> Image uploaded successfullly</small>
+                      <small className='upload-failed' style={{color:"indianred",transition:"opacity 2s",opacity:`${failuremsg}`,fontWeight:"bold"}}> Image uploaded failed</small>
+                    </div>
+                    <div style={{width:"20%",padding:"0",margin:"0"}}>
+                      <button style={{display:`${uploadbtn}`,padding:"5px"}} onClick={changeImage} className='btn btn-primary'>Upload</button>
                     </div>
                   </div>
-                    <br/><br/>
+                    
                      <p>{user && user.name}</p>
                   <p>{user.contact}</p>
                   <p>{user.email}</p>
@@ -115,7 +137,7 @@ function Profile() {
             </center>
           </div>
                    </div>
-                   <div className='col-12 col-md-4' style={{backgroundColor:"white",padding:"30px",boxShadow:"2px 2px 3px 3px lightgrey",borderRadius:"30px"}}>
+                   <div className='col-12 col-md-4' style={{backgroundColor:"white",padding:"30px",borderRightTopRadius:"30px"}}>
                  <div style={{textAlign:"center"}}>
                  <small style={{fontWeight:"bold",fontSize:"25px"}}>{user && user.name}</small><br/>
                  <small style={{color:"grey"}}>@{user && user.username}</small>
@@ -126,7 +148,7 @@ function Profile() {
                         <p style={{color:"grey"}}>Following</p>
                     </div>
                     <div className='col-4' style={{textAlign:"center"}}>
-                    <h1 style={{color:"grey"}}>{user.followers && JSON.parse(user.followers).length}</h1>
+                    <h1 style={{color:"grey"}}>{tempofollowers !== null ? tempofollowers.length : user.followers && JSON.parse(user.followers).length}</h1>
                         <p style={{color:"grey"}}>Followers</p>
                     </div>
                     <div className='col-4' style={{textAlign:"center"}}>
@@ -135,29 +157,30 @@ function Profile() {
                     </div>
                   </div>
                   <div style={{marginTop:"15%"}}>
-                <a href={`/chat/${user.userid}`}> 
+                <a href={`/chat/${user.userid}?display=messages`}> 
                  <button className='btn btn-primary' style={{borderRadius:"100px",width:"50%",fontWeight:"bold",textTransform:"uppercase",color:"white",fontWeight:"bold"}}>
                   <small> Message </small>
                     </button></a><br/><br/>
-                    <button className={user.followers && JSON.parse(user.followers).includes(parseInt(userid)) ? 'btn btn-warning' : 'btn btn-success'} onClick={()=>follow(user.userid)} style={{borderRadius:"100px",width:"50%",fontWeight:"bold",textTransform:"uppercase",color:"white",fontWeight:"bold"}}>
-                  <small>{user.followers && JSON.parse(user.followers).includes(parseInt(userid)) ? "Unfollow" : "Follow"} </small>
+                    <button className={tempofollowers !== null && tempofollowers.includes(parseInt(userid)) ? 'btn btn-warning' : user.followers && JSON.parse(user.followers).includes(parseInt(userid)) ? 'btn btn-warning' : 'btn btn-success'} onClick={()=>follow(user.userid)} style={{borderRadius:"100px",width:"50%",fontWeight:"bold",textTransform:"uppercase",color:"white",fontWeight:"bold"}}>
+                  <small>{tempofollowers !== null && tempofollowers.includes(parseInt(userid)) ? "Unfollow" : user.followers && JSON.parse(user.followers).includes(parseInt(userid)) ? "Unfollow" : "Follow"} </small>
                     </button><br/><br/>
                     <button className='btn btn-danger' style={{borderRadius:"100px",width:"50%",fontWeight:"bold",textTransform:"uppercase",color:"white",fontWeight:"bold"}}>
                   <small> Delete User </small>
                     </button>
                   </div>
-                  <div style={{position:"absolute",bottom:"5px"}}>
+                  <br/><br/><br/>
+                  <div>
                     <center><p style={{color:"grey",fontSize:"15px"}}>Joined Sept 2013</p></center>
                   </div>
                    </div>
-                   <div className='col-2'></div>
+                   <div className='d-none d-md-block col-md-2'></div>
                    </div>
                 </div>
         <div style={{position:"fixed",color:"white",padding:"2px 10px",borderRadius:"20px",zIndex:"10",backgroundColor:"indianred",bottom:"10px",right:"10px"}}>
      <p> <span className='fa fa-upload fa-2x' ></span> Upload</p>
         </div>
          <div className='container contain' style={{marginTop:"30px"}}>
-           {fullprofile.length > 0 ? fullprofile.map(upload =>
+           {fullprofile.length > 0 && fullprofile[0].caption  ? fullprofile.map(upload =>
            <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",border:"1px solid lightgrey"}} key={upload.uploadid}>
             <div style={{display:"flex",width:"100%",flexWrap:"nowrap"}}>
                 <div style={{width:"11%",padding:"5px"}}>
@@ -176,9 +199,13 @@ function Profile() {
              <div className='row' style={{padding:"2px 15px"}}>            
                 {upload.imgs && JSON.parse(upload.imgs) ? 
               JSON.parse(upload.imgs).map(img =>
-                <div style={{margin:"0",padding:"0"}} className={`${upload.imgs && JSON.parse(upload.imgs).length === 1 ?`col-12` : upload.imgs && JSON.parse(upload.imgs).length === 3 ? `col-6` : `col-6`}`}>
-               <img style={{width:"100%",height:`${upload.imgs && JSON.parse(upload.imgs).length > 1 ? "300px" : "500px"}`,padding:"2px",borderRadius:"3px"}} className="uploadedimage" data-src={`https://i.pinimg.com/originals/4f/43/2d/4f432d9234988a5f33b26e0ba06bc6fe.gif`} src={`https://res.cloudinary.com/fruget-com/image/upload/v1659901491/chatapp/uploads/${img}`}/>
-                </div>
+               
+                <div style={{margin:"0",padding:"0"}} key={img} className={`${upload.imgs && JSON.parse(upload.imgs).length === 1 ?`col-12` : upload.imgs && JSON.parse(upload.imgs).length === 3 ? `col-6` : `col-6`}`}>
+               <a href={`/view-upload/${upload.uploadid}`}>
+                 <img style={{width:"100%",height:`${upload.imgs && JSON.parse(upload.imgs).length > 1 ? "300px" : "500px"}`,padding:"2px",borderRadius:"3px"}} className="uploadedimage" data-src={`https://i.pinimg.com/originals/4f/43/2d/4f432d9234988a5f33b26e0ba06bc6fe.gif`} src={`https://res.cloudinary.com/fruget-com/image/upload/v1659901491/chatapp/uploads/${img}`}/>
+                 </a>
+                 </div>
+               
                   )
            : null}
         

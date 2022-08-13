@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { formatermain } from './formatTime';
 import "./main.css"
+import { Link } from 'react-router-dom';
 const CryptoJS = require("crypto-js")
 
-function Uploads() {
+function Uploads(props) {
     const [uploads, setUploads] = useState([])
     const [display, setdisplay] = useState("none")
     const [mainuser, setmainuser] = useState("")
@@ -36,11 +37,11 @@ function Uploads() {
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
           setmainuser(decryptedData)
-        axios.get(`http://localhost:5000/fetch-uploads`)
+        axios.get(`https://realchatapps.herokuapp.com/fetch-uploads`)
         .then( res => {setUploads(res.data)})
         .catch(err => console.log(err))
         }
-    })
+    },[])
     useEffect(()=>{
         const options ={
             rootMargin:"0px",
@@ -65,7 +66,7 @@ function Uploads() {
         if(Cookies.get("cvyx") ){ 
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-        axios.get(`http://localhost:5000/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
+        axios.get(`https://realchatapps.herokuapp.com/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
         .then(res =>{ 
             if(res.data.status === "success"){
       settempolikes({...tempolikes, [`${uploadid}`]:res.data.likes})
@@ -88,7 +89,7 @@ const uploadpost =()=>{
     files.map(img =>{
         formdata.append("files",img)
     })
-    axios.post(`http://localhost:5000/upload-post`, formdata)
+    axios.post(`https://realchatapps.herokuapp.com/upload-post`, formdata)
     .then( res => {console.log(res.data)})
     .catch(err => console.log(err))
 }
@@ -97,7 +98,11 @@ const removeImage=(img,index)=>{
   setimages(images.filter(prev => prev !== img))
   setfiles(files.filter((prev,i)=> i !== index))
 }
+const openpost =()=>{
+    if(props.contain){
 
+    }
+}
     const Addpost =()=>{
         return(
             <div>
@@ -141,12 +146,12 @@ const removeImage=(img,index)=>{
 
    
     return ( 
-       <div style={{backgroundColor:"lightgrey"}}>
+       <div style={{backgroundColor:"rgba(242,242,242)"}}>
        <br/>
         <div style={{position:"fixed",color:"lightgrey",padding:"2px 10px",borderRadius:"20px",zIndex:"10",backgroundColor:"indianred",bottom:"10px",right:"10px"}}>
      <p> <span className='fa fa-upload fa-2x' onClick={()=> setdisplay(display === "block" ? "none" : "block")}></span> Upload</p>
         </div>
-         <div className='container contain' style={{margin:"80px 0px"}}>
+         <div className={props.contain ? `container` : 'container contain'} style={{margin:"80px 0px"}}>
          <div style={{display:`${display}`}}>
                 <br/>
             <div  style={{position:"relative",backgroundColor:"white",marginBottom:"10px",padding:"20px",borderRadius:"20px"}}>
@@ -185,7 +190,7 @@ const removeImage=(img,index)=>{
             </div>
              <div >
            {uploads.length > 0 ? uploads.map(upload =>
-           <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",border:"1px solid lightgrey"}} key={upload.id}>
+           <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",boxShadow:"2px 2px 3px 3px  lightgrey"}} key={upload.id}>
             <div style={{display:"flex",width:"100%",flexWrap:"nowrap"}}>
                 <div style={{width:"11%",padding:"5px"}}>
                     <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${upload.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
@@ -199,7 +204,7 @@ const removeImage=(img,index)=>{
                 <p>{upload.caption}</p>
                 <small></small>
              </div>
-            
+            < Link to={`/view-upload/${upload.uploadid}`}>
              <div className='row' style={{padding:"2px 15px"}}>            
                 {upload.imgs && JSON.parse(upload.imgs) ? 
               JSON.parse(upload.imgs).map(img =>
@@ -208,8 +213,9 @@ const removeImage=(img,index)=>{
                 </div>
                   )
            : null}
-        
-                </div>
+              </div>
+         </Link>
+             
                 <div style={{display:"flex",width:"100%", justifyContent:"space-between"}}>
                     <div className='ml-3' style={{width:"20%",padding:"5px"}}>
                         <span className={tempolikes[`${upload.uploadid}`] && tempolikes[`${upload.uploadid}`].includes(parseInt(mainuser)) ? 'fa fa-thumbs-up text-primary' : upload.likes && JSON.parse(upload.likes).includes(parseInt(mainuser)) ? 'fa fa-thumbs-up text-primary' : 'fa fa-thumbs-o-up text-primary'} onClick={()=>like(upload.uploadid)} style={{fontSize:"20px"}}></span>
@@ -221,15 +227,6 @@ const removeImage=(img,index)=>{
                 
              </div>
              
-             <div style={{display:"flex",padding:"20px"}}>
-                <div style={{width:"100%"}}>
-                    <textarea className='form-control' placeholder={"Be the first to comment"}></textarea><br/>
-                    <button className='btn btn-primary'>submit</button><div>
-           </div>
-           </div>
-
-
-           </div>
            </div>
             ) : 
             <div style={{backgroundColor:"white",width:"100%"}}>

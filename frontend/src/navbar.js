@@ -28,7 +28,7 @@ function Navbar() {
         }
         nav.style.height = nav.style.height === "60vh" ? "0%" : "60vh"
         nav.style.width = nav.style.height === "100%" ? "0%" : "100%"
-        }
+        }//https://realchatapps.herokuapp.com
     return ( 
         <div style={{position:"fixed",top:"0px",width:"100%",zIndex:"1000"}}>
             <nav style={{padding:"0",margin:"0"}}>
@@ -52,7 +52,7 @@ function Navbar() {
              </div>
                    <div  style={{width:"16%",order:"3",padding:"0px",margin:"0px",position:"absolute",top:"0px",left:"84%"}}>
                       <center style={{fontWeight:"bold",color:"rgb(0, 34, 102)",padding:"0px",margin:"0px",paddingBottom:"4px"}}>
-                        <small style={{fontSize:"12px"}}><span style={{fontSize:"18px"}} className='fa fa-globe' ></span> | Support  | <a href="/customer/login"  style={{color:"rgb(0, 34, 102)",textDecoration:"none"}}>Login</a></small><br/>
+                        <small style={{fontSize:"12px"}}><span style={{fontSize:"18px"}} className='fa fa-globe' ></span> | Support  | <a href="/login"  style={{color:"rgb(0, 34, 102)",textDecoration:"none"}}>Login</a></small><br/>
                      <a href="/register" >
                      <button style={{backgroundColor:"indianred",fontWeight:"bold",border:"none",margin:"0px",borderRadius:"20px",color:"white",fontSize:"14px",padding:"2px 13px "}}>
                         <small>SIGN UP FOR FREE</small>
@@ -78,7 +78,7 @@ function Navbar() {
              </div>
              <div  style={{position:"absolute",bottom:"20px",left:"30%"}}>
                       <center style={{fontWeight:"bold",color:"white",padding:"0px",margin:"0px",paddingBottom:"4px"}}>
-                        <small style={{fontSize:"12px"}}><span style={{fontSize:"18px"}} className='fa fa-globe' ></span> | Support  | <a href="/customer/login"  style={{color:"white",textDecoration:"none"}}>Login</a></small><br/>
+                        <small style={{fontSize:"12px"}}><span style={{fontSize:"18px"}} className='fa fa-globe' ></span> | Support  | <a href="/login"  style={{color:"white",textDecoration:"none"}}>Login</a></small><br/>
                      <a href="/register" >
                      <button style={{backgroundColor:"indianred",fontWeight:"bold",border:"none",margin:"0px",borderRadius:"20px",color:"white",padding:"8px 13px "}}>
                         <small>SIGN UP FOR FREE</small>

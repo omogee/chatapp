@@ -30,7 +30,7 @@ function Connection(props) {
           console.log("decryptedData",decryptedData)
           setownerid(parseInt(decryptedData))
           setgroupdetails({ownerid:parseInt(decryptedData)})
-          axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
+          axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
           .then(res => setconn(res.data.connections))
           .catch(err => console.warn(err))
       //    setuserId(params.userId)
@@ -70,12 +70,12 @@ function Connection(props) {
 },[])
 useEffect(()=>{
    socket.on("sending message", data =>{ 
-  axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
+  axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
   .then(res => setconn(res.data))
   .catch(err => console.warn(err))
     })
     socket.on("recieving message", data =>{ 
-      axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
+      axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
       .then(res => setconn(res.data))
       .catch(err => console.warn(err))
         })
@@ -85,12 +85,12 @@ const groupchange =(e)=>{
 }
 const creategroup=()=>{
   const group = JSON.stringify(groupdetails)
-  axios.get(`http://localhost:5000/create-group?group=${group}`)
+  axios.get(`https://realchatapps.herokuapp.com/create-group?group=${group}`)
   .then(res => setgroupresponse(res.data))
   .catch(err=> console.log(err))
 }
 useEffect(()=>{
-  axios.get(`http://localhost:5000/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
+  axios.get(`https://realchatapps.herokuapp.com/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
   .then(res => {
     if( res.data.status === "success"){
       setgroups(res.data.groups)

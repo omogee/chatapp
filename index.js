@@ -223,6 +223,15 @@ app.get("/fetch-users",(req,res)=>{
         res.send(users)
     })
 })
+app.get("/fetch-user",(req,res)=>{
+    conn.query("select * from users where userid = ?",[req.query.id],(err, user)=>{
+        if (err) throw err;
+        console.log(user)
+        if(user){
+        res.json({status:"success", user:user[0]})
+        }
+    })
+})
 
 app.get("/fetch-connections",(req,res)=>{
     conn.query("select conn2 from pendingconnections where conn1 =?",[req.query.id],(err, pendingconn)=>{
@@ -265,31 +274,45 @@ app.post("/change-profilepic", uploads.single("files"), (req,res)=>{
 app.get("/follow-user", (req, res)=>{
     conn.query("select followers from users where userid =?",[req.query.otheruser],(err, followers)=>{
         if (err) throw err;
-     if(followers){
-     let prevfollowers =  JSON.parse(followers[0].followers)
-        if(prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseInt(req.query.mainuser))){
-         prevfollowers = prevfollowers.filter(prev => prev != parseInt(req.query.mainuser))
-         console.log("its included", prevfollowers)
-         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updated)=>{
+        conn.query("select following from users where userid =?",[req.query.mainuser],(err, following)=>{
             if (err) throw err;
-            console.log("unfollowed")
-            if(updated){
-                res.json({status:"success",followers:prevfollowers})
+     if(followers && following){
+     let prevfollowers =  JSON.parse(followers[0].followers)
+     let prevfollowing =  JSON.parse(following[0].following)
+if((prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseInt(req.query.mainuser)) && prevfollowing.includes(req.query.otheruser) || prevfollowing.includes(parseInt(req.query.otheruser)))){
+         prevfollowers = prevfollowers.filter(prev => prev != parseInt(req.query.mainuser))
+         prevfollowing = prevfollowing.filter(prev => prev != parseInt(req.query.otheruser))
+         console.log("its included", prevfollowers, prevfollowing)
+         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updatedfollowers)=>{
+            if (err) throw err;
+         conn.query("update users set following = ? where userid =?",[JSON.stringify(prevfollowing), req.query.mainuser],(err, updatedfollowing)=>{
+                if (err) throw err;
+            console.log("unfollowed",prevfollowers)
+            if(updatedfollowers && updatedfollowing){
+                res.json({status:"success",followers:prevfollowers, following:prevfollowing})
             }
+        })
+         })
+        }else if((!prevfollowers.includes(req.query.mainuser) || !prevfollowers.includes(parseInt(req.query.mainuser)) && !prevfollowing.includes(req.query.otheruser) || !prevfollowing.includes(parseInt(req.query.otheruser)))){
+        prevfollowers = [...prevfollowers, parseInt(req.query.mainuser)]
+        prevfollowing = [...prevfollowing, parseInt(req.query.otheruser)]
+       // prevfollowers.push(parseInt(req.query.id))
+         console.log("its not included", prevfollowers, prevfollowing)
+         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updatedfollowers)=>{
+            if (err) throw err;
+            conn.query("update users set following = ? where userid =?",[JSON.stringify(prevfollowing), req.query.mainuser],(err, updatedfollowing)=>{
+                if (err) throw err;
+            console.log("followed",prevfollowers)
+            if(updatedfollowers && updatedfollowing){
+                res.json({status:"success", followers:prevfollowers, following: prevfollowing})
+            }
+        })
          })
         }else{
-        prevfollowers = [...prevfollowers, parseInt(req.query.mainuser)]
-       // prevfollowers.push(parseInt(req.query.id))
-         console.log("its not included", prevfollowers)
-         conn.query("update users set followers = ? where userid =?",[JSON.stringify(prevfollowers), req.query.otheruser],(err, updated)=>{
-            if (err) throw err;
-            console.log("followed")
-            if(updated){
-                res.json({status:"success", followers:prevfollowers})
-            }
-         })
+            res.json({status:"failed"})
         }
      }
+    })
     })
 })
 app.get("/fetch-userprofile",(req,res)=>{
@@ -433,6 +456,34 @@ app.get("/fetch-uploads", (req,res)=>{
     conn.query(`select * from uploads inner join users on users.userid=uploads.userid order by uploadid desc`, (err, uploads)=>{
         if (err) throw err;
         res.send(uploads)
+    })
+})
+app.get("/upload-comment",(req, res)=>{
+    if(req.query.mainuser){
+    conn.query("insert into comments (userid,uploadid,comment,likes, date,time) values (?,?,?,?,?,?)",
+    [req.query.mainuser,req.query.uploadid,req.query.comment,"[]","[]",Date.now(),Date.now()]
+    ,(err, inserted)=>{
+        if (err) throw err;//select * from comments inner join users on users.userid = comments.userid where comments.uploadid = ?
+ conn.query("select * from comments inner join users on users.userid=comments.userid where comments.uploadid = ? order by comments.commentid desc",[req.query.uploadid],(err, comments)=>{
+if (err) throw err;
+        if (inserted){
+            console.log(inserted, "added successfully")
+            res.json({status:"success",comments:comments})
+        }
+    })
+})
+    }else{
+        res.json({status:"failed"})
+    }
+})
+app.get("/view-upload", (req,res)=>{
+    conn.query(`select * from uploads inner join users on users.userid=uploads.userid where uploads.uploadid= ${req.query.uploadid}`, (err, upload)=>{
+        if (err) throw err;
+        conn.query(`select * from comments inner join users on users.userid = comments.userid where comments.uploadid = ?`,
+        [req.query.uploadid],(err, comments)=>{
+            if (err) throw err;
+           res.json({status:"success",post:upload[0],comments:comments})  
+        })       
     })
 })
 app.post("/upload-post",uploads.array("files"),async (req,res)=>{

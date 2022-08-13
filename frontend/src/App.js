@@ -15,11 +15,13 @@ import { userContext, connectContext } from './contextJs';
 import Users from './users';
 import Inbox from './inbox';
 import Uploads from './upload';
+import ViewUpload from './viewupload';
 
 const CryptoJS = require("crypto-js")
 
 function App() {
   const [users, setusers]=useState([])
+  const [user, setuser] =useState({})
   const [connections,setconnections] = useState([])
   const [pendingconn,setpendingconn] = useState([])
   const [requestedconn,setrequestedconn] = useState([])
@@ -36,11 +38,15 @@ function App() {
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
    socket.connect() 
 
-    axios.get(`http://localhost:5000/fetch-users?id=${decryptedData}`)
+    axios.get(`https://realchatapps.herokuapp.com/fetch-users?id=${decryptedData}`)
     .then(res => setusers(res.data))
     .catch(err => console.warn(err))
+
+    axios.get(`https://realchatapps.herokuapp.com/fetch-user?id=${decryptedData}`)
+    .then(res => setusers(res.data.user))
+    .catch(err => console.log(err))
     /*
-    axios.get(`http://localhost:5000/fetch-pendingconnections?requestid=${decryptedData}`)
+    axios.get(`https://realchatapps.herokuapp.com/fetch-pendingconnections?requestid=${decryptedData}`)
     .then(res => {
       console.log("res.data", res.data.requestedconn, res.data.pendingconn)
       setrequestedconn(res.data.requestedconn)
@@ -48,7 +54,7 @@ function App() {
     })
     .catch(err => console.warn(err))
 */
-     axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
+     axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
     .then(res => {
       setrequestedconn(res.data.requestedconn)
       setpendingconn(res.data.pendingconn)
@@ -131,6 +137,7 @@ let requested=[]
 useEffect(()=>{
   setpageurl(window.location.pathname)
 },[])
+console.log("user",user)
   return (
     <Router>
       { pageurl.indexOf("chat") > -1 || pageurl.indexOf("connections") > -1 
@@ -138,9 +145,9 @@ useEffect(()=>{
       null
       : <Navbar />
     }
-    <userContext.Provider value={{users:[users, setusers], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
+    <userContext.Provider value={{users:[users, setusers],user:[user,setuser], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
       <Routes>  
-       <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users.length} online={online} users={users}/>} />
+       <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users ? users.length: null} online={online} users={users}/>} />
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
         <Route exact path="/user" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
@@ -149,6 +156,7 @@ useEffect(()=>{
         <Route  path="/connections/:userId" element={/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />
         <Route exact path="/profile/:userId" element={<Profile />} /> 
         <Route exact path="/uploads" element={<Uploads />} />
+        <Route exact path="/view-upload/:uploadid" element={<ViewUpload />} />
       </Routes>
          </userContext.Provider>
     </Router>
