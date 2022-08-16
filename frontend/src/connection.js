@@ -71,12 +71,16 @@ function Connection(props) {
 useEffect(()=>{
    socket.on("sending message", data =>{ 
   axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
-  .then(res => setconn(res.data))
+  .then(res => {
+    setconn(res.data.connections)
+  })
   .catch(err => console.warn(err))
     })
     socket.on("recieving message", data =>{ 
       axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
-      .then(res => setconn(res.data))
+      .then(res => {
+        setconn(res.data.connections) 
+      })
       .catch(err => console.warn(err))
         })
 })

@@ -115,7 +115,7 @@ socket.on("sending message", data =>{
     status:data.status,
     time:d.getTime()
   }
-  console.log("sending message")
+  console.log("sending message",text)
   setAllmessages(prev => [...prev, text])
 // allmessages[`conn${data.connid}`] ? setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[...allmessages[`conn${data.connid}`],text]})) : setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[text]}))
   setmessage("")
@@ -133,7 +133,8 @@ socket.on("recieving message", data =>{
     connid:data.connid,
     time:d.getTime()
   }
-  console.log("recieving message")
+ alert("recieving message")
+ console.log("recieving message",text)
   setAllmessages(prev => [...prev, text])
  // allmessages[`conn${data.connid}`] ? setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[...allmessages[`conn${data.connid}`],text]})) : setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[text]}))
 
@@ -151,6 +152,7 @@ const Filechange =(e)=>{
 }
   const sendmessage=(e)=>{
     e.preventDefault()
+   // alert("sending message")
       if(Cookies.get("cvyx") && params.userId  && params.userId  !== null && message.length > 0){
     var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
@@ -160,8 +162,10 @@ const Filechange =(e)=>{
       reciever:params.userId ,
       connid:props.user.connid
     }
-   
-    socket.emit("send message", data)
+  //console.log("data",data)
+    socket.emit("send message", data,()=>{
+      console.log("message sent successfully")
+    })
    }
   }
    const displayinboxlinkheights =()=>{
@@ -202,7 +206,7 @@ const Filechange =(e)=>{
                 </div>
             </div>
  */
-
+console.log("props.connect",props.connects, props.user.userid)
     return ( 
         <div  style={{width:"100%",padding:"0",margin:"0",position:"static"}}>
         
@@ -307,7 +311,7 @@ const Filechange =(e)=>{
                     </button>  
                      </div>
                      <div className="input-group-append" style={{padding:"5px"}}>
-                    <button type="submit" className={`btn ${message.length > 0 ? "btn-primary" :"btn-warning"}`} style={{borderRadius:"40px"}} >
+                    <button type="submit" onClick={sendmessage} className={`btn ${message.length > 0 ? "btn-primary" :"btn-warning"}`} style={{borderRadius:"40px"}} >
                         <span style={{color:"white"}} className="fa fa-paper-plane"></span>
                     </button>  
                      </div>

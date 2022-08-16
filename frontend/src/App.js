@@ -42,8 +42,8 @@ function App() {
     .then(res => setusers(res.data))
     .catch(err => console.warn(err))
 
-    axios.get(`https://realchatapps.herokuapp.com/fetch-user?id=${decryptedData}`)
-    .then(res => setusers(res.data.user))
+    axios.get(`https://realchatapps.herokuapp.com/fetch-justuser?id=${decryptedData}`)
+    .then(res => setuser(res.data.user))
     .catch(err => console.log(err))
     /*
     axios.get(`https://realchatapps.herokuapp.com/fetch-pendingconnections?requestid=${decryptedData}`)
@@ -90,6 +90,19 @@ socket.on("lastseen", data=>{
   }else{
    setlastseen(prev => ({...prev,[`${data.userId}`]:d.getTime()}))
   }
+})
+socket.on("recieving message", data =>{
+  const d = new Date()
+  const text={
+    sender:data.sender,
+    reciever:data.reciever,
+    message:data.message,
+    connid:data.connid,
+    time:d.getTime()
+  }
+  //setAllmessages(prev => [...prev, text])
+ // allmessages[`conn${data.connid}`] ? setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[...allmessages[`conn${data.connid}`],text]})) : setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[text]}))
+
 })
 socket.on("disconnected",()=>{
   setTimeout(()=>{
@@ -143,7 +156,7 @@ console.log("user",user)
       { pageurl.indexOf("chat") > -1 || pageurl.indexOf("connections") > -1 
       ?
       null
-      : <Navbar />
+      : <Navbar pendingconn={pendingconn} />
     }
     <userContext.Provider value={{users:[users, setusers],user:[user,setuser], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
       <Routes>  

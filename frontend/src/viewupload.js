@@ -69,7 +69,7 @@ function ViewUpload() {
             <div className='col-12 col-md-5' style={{margin:"80px 0px",height:"100%",overflow:"scroll"}}>
             <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",boxShadow:"2px 2px 3px 3px  lightgrey"}}>
             <div style={{display:"flex",width:"100%",flexWrap:"nowrap"}}>
-                <div style={{width:"15%",padding:"5px"}}>
+                <div className='imagedisplay' style={{padding:"5px"}}>
                     <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${selectedpost.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
                 <div style={{width:"70%"}}>
@@ -103,10 +103,10 @@ function ViewUpload() {
              </div>
              
              <div style={{display:"flex",padding:"0",margin:"0"}}>
-             <div style={{width:"15%",padding:"10px"}}>
-                    <img src={singleuser ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${singleuser.image}` : "https://i.stack.imgur.com/sXK51.png"} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"40px"}}/>
+             <div style={{padding:"10px"}}>
+                    <img src={singleuser ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${singleuser.image}` : "https://i.stack.imgur.com/sXK51.png"} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
-                <div style={{width:"85%",padding:"5px"}}>
+                <div className='imagedisplay' style={{width:"80%",padding:"5px"}}>
                     <form method="get" onSubmit={addComment}>
                     <input type='text' className='form-control' style={{border:"1px solid lightgrey",borderRadius:"20px",padding:"5px"}} name="comment" onChange={change} value={comment} placeholder="Write a Comment"></input><br/>
                     <button className='d-none btn text-primary' style={{padding:"0",visibility:"hidden"}} type="submit">submit</button>
@@ -117,19 +117,19 @@ function ViewUpload() {
            <div>
            </div>
            {comments && comments.map(comm => 
-           <div className='row mt-2' key={comm.commentid} >
-            <div className='col-2 mt-1'>
-            <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${comm.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"40px"}}/>
+           <div style={{display:"flex"}} key={comm.commentid} >
+            <div className='imagedisplay mt-2' style={{padding:"2px"}}>
+            <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${comm.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
             </div>
-            <div className='col-9' style={{padding:"0",margin:"0"}}>
-            <div style={{backgroundColor:"rgba(242,242,242)",borderRadius:"15px",padding:"10px",border:"2px solid lightgrey"}}>
+            <div style={{width:"80%",padding:"5px"}}>
+            <div style={{backgroundColor:"rgba(242,242,242)",borderRadius:"15px",padding:"10px",border:"1px solid lightgrey"}}>
             <a href={`/profile/${comm.userid}`} style={{textDecoration:"none"}}> <small style={{fontWeight:"bold",color:"black"}}>{comm.name}</small>
             <small style={{float:"right",color:"grey"}}>{formatermain(comm.time)}</small></a><br/>
             <div style={{lineHeight:"0.9",padding:"0px"}}>
             <i><small >{comm.comment}</small></i>
             </div>
             </div>
-            <span className='fa fa-thumbs-o-up ml-3' style={{fontSize:"20px"}}></span> 0
+             <small className='ml-3' style={{color:"grey",fontWeight:"bold"}}>LIKE .</small>
            </div>
            </div>
            )}

@@ -35,6 +35,21 @@ const conn = mysql.createPool({
    // connectionLimit : 20,  
     waitForConnections : true
 })
+/**
+ *    host: 'us-mm-auto-dca-06-b.cleardb.net',
+    user: 'b0d30b2e7ab02c',
+    //b9b001ef539d5b 
+    password: '59dc8abb',
+    //8b36306e 
+    database: 'heroku_fc784cdf41a7785',
+
+      host: 'localhost',
+    user: 'root',
+    //b9b001ef539d5b 
+    password: 'password',
+    //8b36306e 
+    database: 'chatapp',
+ */
 cloudinary.config({
     cloud_name:process.env.CLOUD_NAME,
     api_key: process.env.API_KEY,
@@ -64,11 +79,11 @@ fileFilter: (req, file, cb) => {
 }
 })
 io.on("connection", socket =>{
-    setInterval(() => {
+  /*  setInterval(() => {
         socket.emit("ping")
         console.log('pong')
     }, (100000));
-
+*/
     socket.on("addUser", id =>{
         const user = AddUser({userId:id,socketId:socket.id})
         console.log("user",user)
@@ -223,7 +238,7 @@ app.get("/fetch-users",(req,res)=>{
         res.send(users)
     })
 })
-app.get("/fetch-user",(req,res)=>{
+app.get("/fetch-justuser",(req,res)=>{
     conn.query("select * from users where userid = ?",[req.query.id],(err, user)=>{
         if (err) throw err;
         console.log(user)
@@ -233,6 +248,19 @@ app.get("/fetch-user",(req,res)=>{
     })
 })
 
+app.get("/fetch-user",(req,res)=>{
+    conn.query("select * from users inner join connections  on users.userid = connections.conn1 or users.userid=connections.conn2  where  (connections.conn1=? and connections.conn2=? and users.userid=? ) or (connections.conn1=? and connections.conn2=? and users.userid=? )",[req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.inboxuserId],(err, users)=>{
+        if (err) throw err;
+    if(users.length > 0){
+        res.send(users)
+    }else{
+        conn.query("select * from users where userid=? ",[req.query.inboxuserId],(err, user)=>{
+            if (err) throw err;
+            res.send(user)
+        })
+    }
+    })
+})
 app.get("/fetch-connections",(req,res)=>{
     conn.query("select conn2 from pendingconnections where conn1 =?",[req.query.id],(err, pendingconn)=>{
         if (err) throw err;
@@ -247,8 +275,8 @@ FROM
     LEFT OUTER JOIN (select distinct * from messages order by id DESC) as messagee  ON messagee.connId = connections.connid where (connections.conn1=? or connections.conn2=?) and users.userid != ?
     group by connections.connid `,[req.query.id,req.query.id,req.query.id],(err, connections)=>{
         if (err) throw err;
-   
-      //  console.log(connections) ON connections.conn1 = users.userid or connections.conn2 = users.userid  where users.userid !=
+   //console.log(connections)
+      //   ON connections.conn1 = users.userid or connections.conn2 = users.userid  where users.userid !=
       res.json({pendingconn,requestedconn,connections})
     })
 })
@@ -329,19 +357,7 @@ app.get("/fetch-userprofile",(req,res)=>{
        }
     })
 })
-app.get("/fetch-user",(req,res)=>{
-    conn.query("select * from users inner join connections  on users.userid = connections.conn1 or users.userid=connections.conn2  where  (connections.conn1=? and connections.conn2=? and users.userid=? ) or (connections.conn1=? and connections.conn2=? and users.userid=? )",[req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.mainuserId,req.query.inboxuserId,req.query.inboxuserId],(err, users)=>{
-        if (err) throw err;
-    if(users.length > 0){
-        res.send(users)
-    }else{
-        conn.query("select * from users where userid=? ",[req.query.inboxuserId],(err, justuser)=>{
-            if (err) throw err;
-            res.send(justuser)
-        })
-    }
-    })
-})
+//fetch-user
 app.get("/user/login", (req,res)=>{
     conn.query(`select userid,username from users where (email =? or username=?) and password=?`,[req.query.name,req.query.name,req.query.password],(err, user)=>{
         if (err) throw err;
@@ -366,7 +382,9 @@ app.get("/accept-pendingrequests", (req, res)=>{
         conn.query(`insert into connections (conn1,conn2, conndate, conntime) values (?,?,?,?)`,
         [id.otheruserid,parseInt(id.mainuserid),d.getTime(),d.getTime()],(err, inserted)=>{
           if (err) throw err;
-          if(inserted){       
+          if(inserted){    
+            const typee = getCurrentUser(parseInt(id.otheruserid))
+            socket.broadcast.to(typee.socketId).emit("connection added to your connections")    
            res.json({message:"connection added", status:"success"})
               }
       })
@@ -375,7 +393,7 @@ app.get("/accept-pendingrequests", (req, res)=>{
 })
 app.get("/connect-user", (req, res)=>{
     let id = req.query.id
-    id = JSON.parse(id)
+    id = JSON.parse(id) 
   const d = new Date()
   conn.query(`select * from connections where (conn1 =? and conn2 = ?) OR (conn1=? and conn2=?)`,
   [id.otheruserid,parseInt(id.mainuserid),parseInt(id.mainuserid),id.otheruserid],(err, connected)=>{

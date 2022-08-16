@@ -41,6 +41,7 @@
   .usersdiv{
     left:30%;top:15%;width:35%;
   }
+  .imagedisplay{width:13%}
   .contain{padding:0px 300px}
   @media all and (max-width: 1200px) and (min-width:992px){
     .messagebox{
@@ -69,7 +70,8 @@
     }
     .contain{padding:0px 0px}
   }
-  @media all and (max-width: 550px){
+  @media all and (max-width: 550px) and (min-width:450px){
+    .imagedisplay{width:15%}
     .messagebox{
       width:90%
     }
@@ -77,4 +79,7 @@
       left:5%;top:15%;width:90%;
     }
     .contain{padding:0px 0px}
+  }
+  @media all and (max-width: 450px){
+    .imagedisplay{width:18%}
   }

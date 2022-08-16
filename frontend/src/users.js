@@ -7,12 +7,14 @@ import axios from 'axios';
 import Cookies from "js-cookie"
 import { userContext } from './contextJs';
 import { useContext } from 'react';
+import Login from './login';
 
 const CryptoJS = require("crypto-js")
 
 function Users(props) {
     const [typingclients, settypingclients] = useState([])
     const [lastmessages,setlastmessages] = useState({})
+    const [redirect, setredirect] = useState(false)
      const {users, conns, pendingconn, requestedconn} = useContext(userContext)
      const [mainusers,setusers] = users
      const [mainconnects, setconnects] = conns
@@ -21,6 +23,13 @@ function Users(props) {
 
 
       let navigate = useNavigate()
+      useEffect(()=>{
+        if(!Cookies.get("cvyx")){
+            setredirect(true)
+            }else{
+                
+            }
+      })
         useEffect(()=>{
        socket.on("typers",(typers)=>{
   settypingclients(typers)
@@ -93,6 +102,9 @@ const removerequest=(id)=>{
  useEffect(()=>{
     console.log(mainpendingconn)
  },[mainpendingconn])
+ if(redirect){
+    return(<Login />)
+ }else{
 return ( 
         <div className='container'>
             <div className='row' style={{marginTop:"80px"}}>
@@ -141,6 +153,7 @@ return (
                         )}
               </div>
      );
+ }
 }
 
 export default (Users);

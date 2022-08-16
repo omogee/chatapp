@@ -131,12 +131,14 @@ function Home(props) {
           </div>
         </div>
         <div>
+          {showusers === "block" ? 
         <div className='usersdiv' style={{display:`${showusers}`,position:"fixed",height:"70%",borderRadius:"10px",zIndex:"10",backgroundColor:"white"}}>
         <small onClick={undisplayusers}  style={{cursor:"pointer",float:"right",fontSize:"20px",padding:"10px"}}>X</small>
         <div style={{overflow:"scroll",height:"100%"}}>
         <Users users={props.users} pendingconn={props.pendingconn} requestedconn={props.requestedconn} lastseen={props.lastseen} connects={props.connects} online={props.online}/>
         </div>
         </div>
+        : null}
 <div className='container'>
  <div className='row'>
   <div className='col-12 col-md-8'></div>

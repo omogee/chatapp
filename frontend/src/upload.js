@@ -192,7 +192,7 @@ const openpost =()=>{
            {uploads.length > 0 ? uploads.map(upload =>
            <div style={{backgroundColor:"white",marginBottom:"10px",borderRadius:"10px",padding:"10px",boxShadow:"2px 2px 3px 3px  lightgrey"}} key={upload.id}>
             <div style={{display:"flex",width:"100%",flexWrap:"nowrap"}}>
-                <div style={{width:"11%",padding:"5px"}}>
+                <div className='imagedisplay' style={{padding:"5px"}}>
                     <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${upload.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
                 <div style={{width:"70%"}}>
