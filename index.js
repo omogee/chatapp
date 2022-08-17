@@ -273,7 +273,7 @@ FROM
         INNER JOIN
     users  ON connections.conn1 = users.userid or connections.conn2 = users.userid
     LEFT OUTER JOIN (select distinct * from messages order by id DESC) as messagee  ON messagee.connId = connections.connid where (connections.conn1=? or connections.conn2=?) and users.userid != ?
-    group by connections.connid `,[req.query.id,req.query.id,req.query.id],(err, connections)=>{
+    group by connections.connid order by messagee.id desc`,[req.query.id,req.query.id,req.query.id],(err, connections)=>{
         if (err) throw err;
    //console.log(connections)
       //   ON connections.conn1 = users.userid or connections.conn2 = users.userid  where users.userid !=
@@ -497,7 +497,7 @@ if (err) throw err;
 app.get("/view-upload", (req,res)=>{
     conn.query(`select * from uploads inner join users on users.userid=uploads.userid where uploads.uploadid= ${req.query.uploadid}`, (err, upload)=>{
         if (err) throw err;
-        conn.query(`select * from comments inner join users on users.userid = comments.userid where comments.uploadid = ?`,
+        conn.query(`select * from comments inner join users on users.userid = comments.userid where comments.uploadid = ? order by comments.commentid desc`,
         [req.query.uploadid],(err, comments)=>{
             if (err) throw err;
            res.json({status:"success",post:upload[0],comments:comments})  

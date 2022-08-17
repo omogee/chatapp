@@ -82,4 +82,5 @@
   }
   @media all and (max-width: 450px){
     .imagedisplay{width:18%}
+    .contain{padding:0px 0px}
   }

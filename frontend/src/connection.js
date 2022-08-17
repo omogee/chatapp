@@ -113,7 +113,7 @@ const Messages =()=>{
                   
                         <div className='row'  key={connect.id} style={{padding:"5px 10px",borderBottom:"0.4px solid lightgrey"}}>
                             <div className='col-3' style={{padding:"5px"}}>
-                                <img style={{borderRadius:"50%",width:"100%",border:"2px solid lightgrey",padding:"5px"}} src={connect.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                                <img style={{borderRadius:"50%",width:"100%",height:"80px",border:"2px solid lightgrey",padding:"5px"}} src={connect.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${connect.image}` :connect.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                             </div>
                             <div className='col-8' style={{position:"relative"}}>
                                 <div style={{position:"absolute",top:"20%",lineHeight:"1",width:"100%"}}>

@@ -198,6 +198,7 @@ const openpost =()=>{
                 <div style={{width:"70%"}}>
                   <a href={`/profile/${upload.userid}`} style={{textDecoration:"none"}}> <small style={{fontWeight:"bold",color:"black"}}>{upload.name}</small></a><br/>
                    <small style={{color:"grey"}}> @{upload.username}. {formatermain(upload.time)}</small>
+                   <small style={{float:"right"}}>{formatermain(upload.time)}</small>
                 </div>
             </div>
             <div style={{width:"100%"}}>

@@ -61,7 +61,7 @@ function Navbar(props) {
                 <div className='navdivlist' style={{display:"flex",width:"20%",justifyContent:"space-between"}}>
                <div style={{position:"relative"}}>
                 {Object.keys(newmessages).length > 0 ? 
-                <span className='badge' style={{backgroundColor:"lightgrey",padding:"2px",borderRadius:"15px",fontSize:"17px"}}>
+                <span className='badge mr-3' style={{backgroundColor:"lightgrey",padding:"2px",borderRadius:"15px",fontSize:"17px"}}>
                  <a style={{color:"white",textDecoration:"none"}} href={`/chat/${Object.keys(newmessages)[Object.keys(newmessages).length -1]}?display=messages`}> 
                  <span  style={{textDecorspantion:"none",fontWeight:"bolder",color:"black",textTransform:"uppercase"}} >
                  <span  style={{color:"black",fontSize:"25px",color:"orange",fontFamily:"FontAwesome"}}><span className='fa fa-snapchat'></span></span>
@@ -71,7 +71,7 @@ function Navbar(props) {
                 : null}             
                </div>
                <div>
-                <a  className="ml-2" style={{textDecoration:"none",fontWeight:"bolder",color:"black",textTransform:"uppercase"}} >
+                <a  className="ml-2 mr-3" style={{textDecoration:"none",fontWeight:"bolder",color:"black",textTransform:"uppercase"}} >
                  <span className='bagde' style={{backgroundColor:"indianred",padding:"2px 5px",borderRadius:"10px"}}>
                  <span className='fa fa-plug' style={{fontSize:"15px",color:"white"}}></span>
                  <span className='bagde ml-2' style={{backgroundColor:"green",padding:"5px",borderRadius:"10px"}}>

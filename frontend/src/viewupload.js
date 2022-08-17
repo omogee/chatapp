@@ -74,7 +74,8 @@ function ViewUpload() {
                 </div>
                 <div style={{width:"70%"}}>
                   <a href={`/profile/${selectedpost.userid}`} style={{textDecoration:"none"}}> <small style={{fontWeight:"bold",color:"black"}}>{selectedpost.name}</small></a><br/>
-                   <small style={{color:"grey"}}> @{selectedpost.username}. {formatermain(selectedpost.time)}</small>
+                   <small style={{color:"grey"}}> @{selectedpost.username}.</small>
+                   <small style={{float:"right"}}> {formatermain(selectedpost.time)}</small>
                 </div>
             </div>
             <div style={{width:"100%"}}>
@@ -103,7 +104,7 @@ function ViewUpload() {
              </div>
              
              <div style={{display:"flex",padding:"0",margin:"0"}}>
-             <div style={{padding:"10px"}}>
+             <div style={{padding:"10px",width:"20%"}}>
                     <img src={singleuser ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${singleuser.image}` : "https://i.stack.imgur.com/sXK51.png"} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
                 <div className='imagedisplay' style={{width:"80%",padding:"5px"}}>
@@ -119,17 +120,18 @@ function ViewUpload() {
            {comments && comments.map(comm => 
            <div style={{display:"flex"}} key={comm.commentid} >
             <div className='imagedisplay mt-2' style={{padding:"2px"}}>
-            <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${comm.image}`} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
+            <img src={`https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${comm.image}`} style={{width:"100%",border:"1px solid grey",padding:"2px",borderRadius:"50%",height:"50px"}}/>
             </div>
-            <div style={{width:"80%",padding:"5px"}}>
+            <div style={{padding:"5px"}}>
             <div style={{backgroundColor:"rgba(242,242,242)",borderRadius:"15px",padding:"10px",border:"1px solid lightgrey"}}>
             <a href={`/profile/${comm.userid}`} style={{textDecoration:"none"}}> <small style={{fontWeight:"bold",color:"black"}}>{comm.name}</small>
-            <small style={{float:"right",color:"grey"}}>{formatermain(comm.time)}</small></a><br/>
+            <small className='ml-3 mt-1' style={{float:"right",color:"grey"}}>{formatermain(comm.time)}</small></a><br/>
             <div style={{lineHeight:"0.9",padding:"0px"}}>
             <i><small >{comm.comment}</small></i>
             </div>
             </div>
-             <small className='ml-3' style={{color:"grey",fontWeight:"bold"}}>LIKE .</small>
+             <small className='ml-3' style={{color:"grey",fontWeight:"bold"}}>Like </small>
+             <small className='mr-3' style={{color:"grey",fontWeight:"bold",float:"right"}}>Reply</small>
            </div>
            </div>
            )}

@@ -218,7 +218,7 @@ console.log("props.connect",props.connects, props.user.userid)
                </div>
               </div>
                 <div className='inboxImage'>
-                <img style={{borderRadius:"50%",backgroundColor:"white",width:"100%",padding:"5px"}} src={props.user && props.user.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                <img style={{borderRadius:"50%",height:"70px",backgroundColor:"white",width:"100%",padding:"5px"}} src={props.user && props.user.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${props.user.image}` : props.user && props.user.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                 </div>
                 <div className='inboxDetails' style={{position:"relative"}}>
                 <div style={{position:"absolute",height:"100%",width:"100%",top:"10%",padding:"5px",left:"3px",lineHeight:"0.9"}}>
