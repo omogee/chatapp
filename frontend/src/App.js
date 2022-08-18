@@ -156,14 +156,14 @@ console.log("user",user)
       { pageurl.indexOf("chat") > -1 || pageurl.indexOf("connections") > -1 
       ?
       null
-      : <Navbar pendingconn={pendingconn} />
+      : <Navbar pendingconn={pendingconn}  requestedconn={requestedconn}/>
     }
     <userContext.Provider value={{users:[users, setusers],user:[user,setuser], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
       <Routes>  
        <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users ? users.length: null} online={online} users={users}/>} />
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
-        <Route exact path="/user" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
+        <Route exact path="/users" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
         <Route  path="/chat/:userId" element={ <ChatApp users={connections} connects={connects} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
         <Route  path="/inbox/:userId" element={ <Inbox users={connections} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
         <Route  path="/connections/:userId" element={/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />

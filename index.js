@@ -383,8 +383,8 @@ app.get("/accept-pendingrequests", (req, res)=>{
         [id.otheruserid,parseInt(id.mainuserid),d.getTime(),d.getTime()],(err, inserted)=>{
           if (err) throw err;
           if(inserted){    
-            const typee = getCurrentUser(parseInt(id.otheruserid))
-            socket.broadcast.to(typee.socketId).emit("connection added to your connections")    
+          //  const typee = getCurrentUser(parseInt(id.otheruserid))
+          //  socket.broadcast.to(typee.socketId).emit("connection added to your connections")    
            res.json({message:"connection added", status:"success"})
               }
       })

@@ -172,7 +172,7 @@ function Home(props) {
                        </div>
                    </div>
                    <div className="row">
-                       <div className='col-12 col-md-6'>
+                       <div className='d-none d-md-block col-md-6'>
                        <div onClick={displayusers}  style={{color:"white",margin:"10px",width:"100%",borderRadius:"10px",padding:"30px",backgroundColor:"#FF6347",cursor:"pointer"}}>
                            <center>
                            <h4>Check Connections <span className='fa fa-link'></span></h4>
@@ -181,6 +181,18 @@ function Home(props) {
                            </center>
                        </div>
                        </div>
+                       <div className='col-12 d-md-none'> 
+                       <a href={`/users`}>
+                       <div onClick={displayusers}  style={{color:"white",margin:"10px",width:"100%",borderRadius:"10px",padding:"30px",backgroundColor:"#FF6347",cursor:"pointer"}}>
+                           <center>
+                           <h4>Check Connections <span className='fa fa-link'></span></h4>
+                           <small style={{fotWeight:"bold"}}>  Check Pending Messages and Open Connections.</small><br/>
+                           <small></small>
+                           </center>
+                       </div>
+                       </a>
+                       </div>
+                      
                        <div className='col-12 col-md-6'>
                        <div  style={{color:"white",margin:"10px",width:"100%",borderRadius:"10px",padding:"30px",backgroundColor:"#FF6347",cursor:"pointer"}}>
                        <center>
