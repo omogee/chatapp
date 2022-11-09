@@ -3,7 +3,7 @@ import socket from "./socketconn"
 import Cookies from "js-cookie"
 import axios from "axios"
 import Login from "./login"
-import {useParams} from "react-router-dom"
+import {Navigate, useParams} from "react-router-dom"
 import { formater, formatlastSeen, getSentTime } from './formatTime';
 import { userContext } from './contextJs';
  import "./main.css"
@@ -23,8 +23,10 @@ function Inbox(props) {
 
     const querystring = new URLSearchParams(window.location.search)
     const [user,setuser] = useState({})
+    const [propsuser, setpropsuser] = useState({})
     const [userId, setuserId] = useState(querystring.get("userId"))
     const [ownerid, setownerid] = useState("")
+    const [redirect, setRedirect] = useState(false)
    const isFirstRender = useRef(true)
    const refmessage= useRef(null)
    const hiddenref = useRef(null)
@@ -38,11 +40,31 @@ useEffect(()=>{
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   setownerid(decryptedData)
   setuserId(params.userId)
-  axios.get(`https://realchatapps.herokuapp.com/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
+  axios.get(`http://localhost:5000/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
+  .then(res => {
+      if(res.data.length === 0 || !res.data){
+ //    setredirect(true)
+      }else{
+          setpropsuser(res.data[0])
+      }
+  })
+  .catch(err => console.warn(err))
+
+  axios.get(`http://localhost:5000/fetch-justuser?id=${decryptedData}`)
+  .then(res => {
+    setuser(res.data.user)
+  })
+  .catch(err => console.log(err))
+
+  axios.get(`http://localhost:5000/fetch-messages?conn1=${decryptedData}&conn2=${params.userId}`)
   .then(res => setAllmessages(res.data))
   .catch(err => console.warn(err))
+
+  hiddenref.current.scrollIntoView({behavior:"smooth"})
+}else{
+  setRedirect(true)
 }
- hiddenref.current.scrollIntoView({behavior:"smooth"})
+
 },[params])
 useEffect(()=>{
   if(refmessage.current && allmessages.length > 0){
@@ -51,7 +73,6 @@ useEffect(()=>{
   }
 },[allmessages])
  const scrollToTop =()=>{
-  //  alert("re-arranging")
    refmessage.scrollTop =  refmessage.scrollHeight;
 //  this.dummyDiv.scrollIntoView({behavior:"smooth"})
   }
@@ -70,15 +91,17 @@ useEffect(()=>{
    const data ={
      sender: userId,
      reciever: ownerid,
-     connId : props.user.connid
+     connId : propsuser.connid
    }
+
    socket.emit("set all messages to read",data)
    socket.on("set messages to read", data=>{
+   
      allmessages.map(message =>{
        message.status = "seen"
      })
    })
- })
+ },[userId, ownerid])
  useEffect(()=>{
   if(props.online.includes(parseInt(userId))){
     allmessages.map(message =>{
@@ -113,6 +136,7 @@ socket.on("sending message", data =>{
     message:data.message,
     connid:data.connid,
     status:data.status,
+    type:data.type,
     time:d.getTime()
   }
   console.log("sending message",text)
@@ -131,9 +155,10 @@ socket.on("recieving message", data =>{
     reciever:data.reciever,
     message:data.message,
     connid:data.connid,
+    type:data.type,
     time:d.getTime()
   }
- alert("recieving message")
+
  console.log("recieving message",text)
   setAllmessages(prev => [...prev, text])
  // allmessages[`conn${data.connid}`] ? setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[...allmessages[`conn${data.connid}`],text]})) : setAllmessages(prev => ({...prev, [`conn${data.connid}`]:[text]}))
@@ -152,7 +177,7 @@ const Filechange =(e)=>{
 }
   const sendmessage=(e)=>{
     e.preventDefault()
-   // alert("sending message")
+
       if(Cookies.get("cvyx") && params.userId  && params.userId  !== null && message.length > 0){
     var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
@@ -160,7 +185,7 @@ const Filechange =(e)=>{
       message,
       sender:decryptedData, 
       reciever:params.userId ,
-      connid:props.user.connid
+      connid:propsuser.connid
     }
   //console.log("data",data)
     socket.emit("send message", data,()=>{
@@ -187,29 +212,32 @@ const Filechange =(e)=>{
                </div>
               </div>
                 <div className='col-2 col-md-2'>
-                <img style={{borderRadius:"50%",width:"100%",padding:"5px",border:"2px solid lightgrey"}} src={props.user && props.user.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                <img style={{borderRadius:"50%",width:"100%",padding:"5px",border:"2px solid lightgrey"}} src={propsuser && propsuser.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                 </div>
                 <div className='col-9 col-md-9' style={{position:"relative"}}>
                 <div style={{position:"absolute",height:"100%",width:"100%",top:"20%",padding:"5px",left:"3px",lineHeight:"0.9"}}>
-                                <small style={{fontSize:"18px",color:"white",fontWeight:"bold"}}>{props.user && props.user.name}</small>
-                                <small style={{fontSize:"12px",color:"white"}}> @{props.user && props.user.username}</small><br/>
-                                {typingclients.includes(parseInt(props.user && props.user.userid)) ? 
+                                <small style={{fontSize:"18px",color:"white",fontWeight:"bold"}}>{propsuser && propsuser.name}</small>
+                                <small style={{fontSize:"12px",color:"white"}}> @{propsuser && propsuser.username}</small><br/>
+                                {typingclients.includes(parseInt(propsuser && propsuser.userid)) ? 
                                 <i style={{fontSize:"12px",color:"green",fontWeight:"bold"}}> typing...</i>
-                                 : props.online.includes(parseInt(props.user && props.user.userid)) ?                         
+                                 : props.online.includes(parseInt(propsuser && propsuser.userid)) ?                         
                                  <i style={{fontSize:"12px",color:"yellow",fontWeight:"bold"}}> Active</i>
-                                 : props.lastseen[props.user.userid] ? 
-                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.lastseen[props.user.userid])}</i>
+                                 : props.lastseen[propsuser.userid] ? 
+                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.lastseen[propsuser.userid])}</i>
                                  : 
-                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.user.lastseen)}</i>}
+                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(propsuser.lastseen)}</i>}
                                 
                                 </div>
                 </div>
             </div>
  */
-console.log("props.connect",props.connects, props.user.userid)
+if(redirect){
+  return(
+  < Navigate to="/login" state="hello"></Navigate>
+  )
+}else{
     return ( 
-        <div  style={{width:"100%",padding:"0",margin:"0",position:"static"}}>
-        
+        <div  style={{width:"100%",padding:"0",margin:"0",position:"static"}}>       
             <div style={{position:"sticky",top:"0px",width:"100%",zIndex:"3"}}>
             <div style={{backgroundColor:"#FF6347",display:"flex",width:"100%",padding:"5px 8px",margin:"0"}}>
               <div className="d-md-none" style={{position:"relative",width:"7%"}}>
@@ -218,20 +246,22 @@ console.log("props.connect",props.connects, props.user.userid)
                </div>
               </div>
                 <div className='inboxImage'>
-                <img style={{borderRadius:"50%",height:"70px",backgroundColor:"white",width:"100%",padding:"5px"}} src={props.user && props.user.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${props.user.image}` : props.user && props.user.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                  <a href={`/profile/${propsuser.userid}`}>
+                <img style={{borderRadius:"50%",height:"70px",backgroundColor:"white",width:"100%",padding:"0px"}} src={propsuser && propsuser.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${propsuser.image}` : propsuser && propsuser.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                </a>
                 </div>
                 <div className='inboxDetails' style={{position:"relative"}}>
-                <div style={{position:"absolute",height:"100%",width:"100%",top:"10%",padding:"5px",left:"3px",lineHeight:"0.9"}}>
-                                <small style={{fontSize:"18px",color:"white",fontWeight:"bold"}}>{props.user && props.user.name}</small><br/>
-                                <small style={{fontSize:"12px",color:"white"}}> @{props.user && props.user.username}</small><br/>
-                                {typingclients.includes(parseInt(props.user && props.user.userid)) ? 
+                <div style={{position:"absolute",height:"100%",width:"100%",top:"10%",padding:"5px",left:"3px",lineHeight:"1.2"}}>
+                                <small style={{fontSize:"18px",color:"white",fontWeight:"bold"}}>{propsuser && propsuser.name}</small><br/>
+                                <small style={{fontSize:"12px",color:"white"}}> @{propsuser && propsuser.username}</small><br/>
+                                {typingclients.includes(parseInt(propsuser && propsuser.userid)) ? 
                                 <i style={{fontSize:"12px",color:"green",fontWeight:"bold"}}> typing...</i>
-                                 : props.online.includes(parseInt(props.user && props.user.userid)) ?                         
+                                 : props.online.includes(parseInt(propsuser && propsuser.userid)) ?                         
                                  <i style={{fontSize:"12px",color:"yellow",fontWeight:"bold"}}> Active</i>
-                                 : props.lastseen[props.user.userid] ? 
-                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.lastseen[props.user.userid])}</i>
+                                 : props.lastseen[propsuser.userid] ? 
+                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.lastseen[propsuser.userid])}</i>
                                  : 
-                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(props.user.lastseen)}</i>}
+                                 <i style={{fontSize:"12px",color:"lightgrey",fontWeight:"bold"}}>{formatlastSeen(propsuser.lastseen)}</i>}
                                 
                                 </div>
                 </div>
@@ -259,23 +289,26 @@ console.log("props.connect",props.connects, props.user.userid)
                 </div>
             </div>
             </div>
-            {props.user.userid &&  props.connects.includes(props.user.userid) ? 
-            <div ref={refmessage} style={{width:"100%",height:"100%",marginTop:"10px",overflow:"scroll"}}>
+            <div className='inboxbackground' style={{height:"100%",zIndex:"-3",top:"10%",backgroundSize:"cover",position:"fixed",backgroundRepeat:"no-repeat",backgroundPosition:"center",opacity:"0.7",backgroundImage:user && user.backgroundImage ? `url(https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/backgroundimage/${user.backgroundImage})` : "",marginTop:"10px"}}>
+              </div>
+            {propsuser.userid &&  props.connects.includes(propsuser.userid) ? 
+           
+            <div ref={refmessage} style={{width:"100%",minHeight:"100%",zIndex:"20",marginTop:"10px",overflow:"scroll"}}>
               {allmessages.map((message, i) =>
-                 <div className='mr-3 ml-3 mb-2 mt-3' key={message.time} style={{display:`${(message.sender === ownerid && parseInt(message.reciever) === props.user.userid) || (message.reciever === ownerid && parseInt(message.sender) === props.user.userid) ? "block" : "none"}`}}>
+                 <div className='mr-3 ml-3 mb-2 mt-3' key={message.time} style={{height:"100%",display:`${(message.sender === ownerid && parseInt(message.reciever) === propsuser.userid) || (message.reciever === ownerid && parseInt(message.sender) === propsuser.userid) ? "block" : "none"}`}}>
                   {i === 0 || getSentTime(message.time) !== getSentTime(allmessages[i > 0 ? i-1 : 0].time) ? 
       <div style={{width:"100%",clear:"both"}}>
       <center>
         <small>
-          <button style={{padding:"2px",border:"1px solid lightgrey",marginTop:`${i === 0 ? "0px" : "25px"}`,textTransform:"uppercase",fontWeight:"bold"}}>
+          <button style={{padding:"2px",border:"1px solid lightgrey",backgroundColor:"white",marginTop:`${i === 0 ? "0px" : "25px"}`,textTransform:"uppercase",fontWeight:"bold"}}>
             <small style={{color:"grey"}}>{getSentTime(message.time)}</small>
             </button>
           </small>
       </center>
       </div>
       : null}
-                   <div className='mt-2' style={{float:`${message.sender === ownerid ? "right" : "left"}`,maxWidth:"70%",padding:"10px",borderRadius:"5px",clear:"both",border:`${message.sender === ownerid ? "1px solid #FF6347" : "1px solid lightgrey"}`}}>
-                     <small >{message.message} </small><small className='mt-1' style={{float:"right",clear:"both",marginLeft:"5px"}}>{formater(message.time)} {message.sender === ownerid && message.status === "sent" ? 
+                   <div className='mt-2' style={{backgroundColor:`${message.sender === ownerid ? "white" : "pink"}`,float:`${message.sender === ownerid ? "right" : "left"}`,maxWidth:"70%",padding:"10px",borderRadius:"5px",clear:"both",border:`${message.sender === ownerid ? "1px solid #FF6347" : "1px solid lightgrey"}`}}>
+                     <small style={{fontSize:"13px"}} >{message.message} </small><small className='mt-1' style={{float:"right",clear:"both",marginLeft:"5px",fontSize:'13px'}}>{formater(message.time)} {message.sender === ownerid && message.status === "sent" ? 
                      <small style={{fontFamily:"FontAwesome"}} > &#xf00c;</small>
                     : message.sender === ownerid && message.status === "delivered" ? 
                     <small style={{fontFamily:"FontAwesome"}} > &#xf00c;&#xf00c;</small>
@@ -291,22 +324,22 @@ console.log("props.connect",props.connects, props.user.userid)
 
               : <div style={{width:"100%",height:"100%",marginTop:"10px",overflow:"scroll"}}>
                 <p style={{textAlign:"center",color:"red"}}>You Cannot send messages to this user</p><br/>
-                <p>Click Here to connect with this @{props.user.username}</p>
+                <p>Click Here to connect with this @{propsuser.username}</p>
                 </div>}
-              <div style={{backgroundColor:"white",height:"40px", width:"100%"}} ref={hiddenref}></div>
-              <div style={{backgroundColor:"white",height:"100px",width:"100%"}}>
+              <div style={{height:"5px", width:"100%",marginBottom:"10%"}} ref={hiddenref}></div>
+              <div style={{backgroundColor:"white",width:"100%"}}>
           
-            <div className="inboxinput" style={{position:"fixed",bottom:"0px",backgroundColor:"white",padding:"0px 10px",margin:"0px"}}>
+            <div className="inboxinput" style={{position:"fixed",bottom:"0px",padding:"0px 10px",margin:"0px"}}>
                    <form onSubmit={sendmessage}>
                        <div className="input-group mb-3" >
                        <div className="input-group-prepend">
-                    <button className={`btn `} style={{fontSize:"20px",border:"1px solid lightgrey",borderTopLeftRadius:"20px",borderBottomLeftRadius:"20px",borderRight:"none"}} type="submit">
+                    <button className={`btn `} style={{fontSize:"20px",backgroundColor:"white",border:"1px solid lightgrey",borderTopLeftRadius:"20px",borderBottomLeftRadius:"20px",borderRight:"none"}} type="submit">
                         <span  className="fa fa-smile text-muted"></span>
                     </button>  
                      </div>        
-                      <input type="text"  className="form-control form-control-lg navsearch" name='message' ref={inputref} onChange={change} value={message}  placeholder="&#xf044; Type Message" style={{border:"1px solid lightgrey",borderLeft:"0",fontFamily:"FontAwesome",borderRight:"0"}}  />
+                      <input type="text"  className="form-control form-control-lg navsearch" name='message' ref={inputref} onChange={change} value={message}  placeholder="&#xf044; Type Message" style={{border:"1px solid lightgrey",backgroundColor:"white",fontSize:"18px",borderLeft:"0",fontFamily:"FontAwesome",borderRight:"0"}}  />
                      <div className="input-group-append">
-                    <button style={{border:"1px solid lightgrey",borderTopRightRadius:"20px",borderBottomRightRadius:"20px",borderLeft:"none"}}  type="submit">
+                    <button style={{border:"1px solid lightgrey",borderTopRightRadius:"20px",borderBottomRightRadius:"20px",borderLeft:"none",backgroundColor:"white"}}  type="submit">
                         <span style={{fontSize:"20px"}} className="fa fa-camera text-muted"></span>
                     </button>  
                      </div>
@@ -321,8 +354,13 @@ console.log("props.connect",props.connects, props.user.userid)
             </div>
         </div>
      );
+    }
 }
 /**
+ *  <div style={{backgroundColor:"white",height:"40px", width:"100%"}} ref={hiddenref}></div>
+              <div style={{backgroundColor:"white",border:"2px solid orange",height:"100px",width:"100%"}}>
+
+              
  *   <div className='messagebox' style={{position:"fixed",display:"none",bottom:"0",width:"100%",backgroundColor:"white"}}>
                <form >
                 <div className='row'>

@@ -5,6 +5,7 @@ const cors = require("cors")
 const path = require("path")    
 const mysql = require("mysql")
 const fs = require("fs")
+const nodemailer = require("nodemailer")
 
 const multer = require("multer")
 const cloudinary = require("cloudinary")
@@ -14,22 +15,118 @@ const app = express()
 
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const e = require("express")
 const io = new Server(server);
-app.use(cors())
+/**
+ * create a transporter object,
+ * create a mail option object,
+ * use the transporter.sendMail method top send mail
+ */
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'yexies4ogb@gmail.com',
+      pass: 'oszwncszxcxqsajh'
+    }
+})
+transporter.verify(function(error, success) {
+    if (error) {
+          console.log(error);
+    } else {
+          console.log('Server is ready to take our messages');
+    }
+  });
+
+
+// app.use(cors())
 app.use(bodyParser.urlencoded({extended: true}))  
 app.use(bodyParser.json())   
+app.use((req, res, next)=>{
+   console.log("i am in the index page")
+    next()
+})
 
+app.use((req,res,next)=>{
+    console.log("i am here")
+   const promise = new Promise((resolve, reject)=>{
+    let usersTodelete = []
+    conn.query(`select * from users where confirmed != ?`,["true"], (err, users)=>{
+        if(users && users[0]){
+        users.forEach(user =>{
+            let current_date = new Date().getTime()
+            if (parseInt(current_date) - parseInt(user.reg_time) > 1000){
+                usersTodelete.push(user.userid)
+            }
+
+        })
+    }
+    resolve(usersTodelete)
+    })
+   }) 
+   promise.then(data => {
+    conn.query(`select * from users where userid IN (${data})`, (err, falseusers)=>{
+        if (err) throw err;
+      //  console.log("falseusers", falseusers)
+    })
+   })
+    next()
+})
+const loginMail =(req, res, next)=>{
+   const authuser = req.query.id  ? true : false
+   console.log("req.query.name", req.query.name)
+    if(authuser){
+        return res.status("404").send("Not Found")
+    }else{
+        const emailPromise = new Promise((resolve, reject)=>{
+            if(req.query.name && req.query.name.includes("@")){
+                resolve(req.query.name)
+               }else{
+               conn.query("select email from users where email =? or username=? ",[req.query.name, req.query.name], (err, useremail)=>{
+                if (err) throw err;
+                console.log("useremail",req.query.name, useremail)
+                if(useremail[0] && useremail[0].email){
+                  resolve(useremail[0].email)
+                }
+               })
+               }
+        })
+     emailPromise.then(data =>{
+        console.log("data", data)
+        const mailOptions ={
+            from: '"Login Successfully On This Device" <yexies4ogb@gmail.com>',
+            to: `${data}`,
+            subject: 'Hurray, Welcome Back !!!',
+            text: 'Hey there, it’s our first message sent with Nodemailer ;) ',
+            html: `<b>Hey there! </b><br> You are recieving this message because we believe you just logged into your hormel chat account...<br/>
+            <br/>
+            Remember to chat and connect with friends from all over the world in just a click>>><br/><br/>
+            To enjoy limitless contacts and friends ever willing to chat and link up kindly click on this button to enjoy over 2million subscribers worldwide<br/><br/>
+            <a href="">
+            <button>Click Me!</button>
+            </a> ` }
+        transporter.sendMail(mailOptions, (error, info)=>{
+            if (error) {
+                console.log(error);
+              } else {
+                console.log('Email sent: ' + info.response);
+              }
+        })
+     })
+        next()
+    }
+}
 const conn = mysql.createPool({
     connectionLimit : 1000,
     connectTimeout  : 60 * 60 * 1000,
     acquireTimeout  : 60 * 60 * 1000,
     timeout         : 60 * 60 * 1000,
-    host: 'us-mm-auto-dca-06-b.cleardb.net',
-    user: 'b0d30b2e7ab02c',
+
+    host: 'localhost',
+    user: 'root',
     //b9b001ef539d5b 
-    password: '59dc8abb',
+    password: 'password',
     //8b36306e 
-    database: 'heroku_fc784cdf41a7785',
+    database: 'chatapp',
     //heroku_ea5621dea112dad 
     multipleStatements: true,
    // connectionLimit : 20,  
@@ -86,9 +183,18 @@ io.on("connection", socket =>{
 */
     socket.on("addUser", id =>{
         const user = AddUser({userId:id,socketId:socket.id})
-        console.log("user",user)
+        const ownerid = id
         const connections = getConnectedUsers()
        io.emit("online users", connections)
+       conn.query(`select title from chatgroups where members Like ? OR members Like ? OR members Like ? OR members = ?`,
+       [`%${ownerid}%`,`[${ownerid}%`,`%,${ownerid}]`,`[${ownerid}]`],(err, groups)=>{
+           if (err) throw err;   
+           if (groups && groups.length > 0){
+             groups.map(group=>{
+                socket.join(group.title)
+             })
+           }
+       })
     })   
     socket.on("removeUser", id =>{
         const user = removeUser(id)
@@ -106,11 +212,11 @@ io.on("connection", socket =>{
     })
     socket.on("set all messages to read", data=>{
         const sender = getCurrentUser(data.sender)
+        console.log("sender is here", data, sender)
         if(sender){
-        console.log(" i have told ", sender.socketId, "to set messages to read")
         socket.broadcast.to(sender.socketId).emit("set messages to read", data)
+        console.log("no sender here", data)
         conn.query("update messages set status =? where sender=? and reciever=? and status !=?",["seen",data.sender,data.reciever,"seen"],(err, result)=>{
-            console.log("message status updated in db ")
         })
         }
     })
@@ -143,6 +249,23 @@ io.on("connection", socket =>{
             })
      }
 
+    })
+    socket.on("room_message",data =>{
+        console.log("room_message", data)
+        io.to(data.room).emit("room_message_delivery", data)
+        conn.query(`insert into groupmessages (groupid,sender,type,message,time,date,status) values (?,?,?,?,?,?,?)`,
+        [data.room_id,data.sender,data.type, data.message, data.time,data.time, "sent"], (err, done)=>{
+            if(err) throw err;
+            if (done){
+               console.log("done")
+            }
+        })
+    })
+    socket.on("typing_group", data=>{
+        console.log("a user is typing to a group",data)  
+        if(data && data.room){    
+        io.to(data.room).emit("typing_group_broadcast", data)       
+        }                                                                                                                                                       
     })
      socket.on("untyping", (data)=>{
      const typer = getCurrentUser(data.typingclient)
@@ -198,9 +321,34 @@ io.on("connection", socket =>{
     }else{
         conn.query("insert into chatgroups (admin, about,title,time) values (?,?,?,?)",[ownerid,groupabout, grouptitle,time],(err, inserted)=>{
             if (err) throw err;
-            res.json({message:"group created successfully", status:"sucess"})
+            res.json({message:"group created successfully", status:"success"})
         })
     }
+    })
+  })
+  app.get("/join-group", (req,res)=>{
+    let ownerid = req.query.ownerid
+    conn.query("select members from chatgroups where groupId =?",[req.query.groupid], (err, members)=>{
+        if (err) throw err;
+        let oldmembers = members[0].members;
+        oldmembers = JSON.parse(oldmembers)
+        oldmembers.push(parseInt(ownerid))
+        oldmembers = JSON.stringify(oldmembers)
+        conn.query("update chatgroups set members = ? where groupId =?",[oldmembers, req.query.groupid], (err, done)=>{
+            if (err) throw err;
+            if (done){
+                console.log(oldmembers)
+                res.json({status:"success",newmembers:oldmembers})
+            }
+        })
+    })
+  })
+  app.get("/fetch-groupmessages", (req,res)=>{
+    conn.query("select * from groupmessages inner join users on (groupmessages.sender = users.userid) where groupid =?",[req.query.groupid],(err, savedmessages)=>{
+        if (err) throw err;
+        if ( savedmessages){
+            res.json({status:"success", savedmessages:savedmessages})
+        }
     })
   })
   app.get("/fetch-group", (req,res)=>{
@@ -208,8 +356,10 @@ io.on("connection", socket =>{
     console.log("owner", ownerid)
     conn.query("select * from users where userid = ?", [ownerid], (err, user)=>{
         if (err) throw err;
+        // Like '%,1,%%' OR members Like '[1,%' OR members Like '%,1]' OR members = '[1]
         if ( user && user.length > 0){
-    conn.query(`select * from chatgroups where admin = ?`,[ownerid],(errTwo, groups)=>{
+    conn.query(`select * from chatgroups where members Like ? OR members Like ? OR members Like ? OR members = ?`,
+    [`%${ownerid}%`,`[${ownerid}%`,`%,${ownerid}]`,`[${ownerid}]`],(errTwo, groups)=>{
         if (errTwo) throw errTwo;   
         res.json({user,groups, status:"success"})
     })
@@ -219,7 +369,7 @@ io.on("connection", socket =>{
     })
   })
 app.get("/fetch-messages", (req,res)=>{
-    console.log(req.query.conn1,req.query.conn2, "req.query.connId")
+    
     conn.query(`select connId from connections where (conn1 = ? and conn2 = ?) or (conn2 =? and conn1=?)`,[parseInt(req.query.conn1),parseInt(req.query.conn2),parseInt(req.query.conn1),parseInt(req.query.conn2)], (err, connidentity)=>{
         if (err) throw err;
         if(connidentity && connidentity[0]){
@@ -233,17 +383,27 @@ app.get("/fetch-messages", (req,res)=>{
     })
 })
 app.get("/fetch-users",(req,res)=>{
+    console.log("fetching users ")
     conn.query("select * from users where userid != ?",[req.query.id],(err, users)=>{
         if (err) throw err;
         res.send(users)
     })
 })
+
 app.get("/fetch-justuser",(req,res)=>{
     conn.query("select * from users where userid = ?",[req.query.id],(err, user)=>{
         if (err) throw err;
-        console.log(user)
         if(user){
-        res.json({status:"success", user:user[0]})
+            //select COUNT (*) AS messageee from (select * from messages where reciever="+req.query.id+" and status =? group by sender) as mess order by id desc",["delivered"]
+            conn.query("select * from messages inner join users on messages.sender = users.userid where reciever="+req.query.id+" and status =? group by sender order by id desc; select * from messages inner join users on messages.sender=users.userid where reciever="+req.query.id+" and status =? ",["delivered","delivered"],(err, unreadmessages)=>{
+                if(err) throw err;
+             conn.query("select * from messages where reciever = ? order by id DESC limit 1", [req.query.id], (err, lastmessagerow)=>{
+                if (err) throw err;
+                console.log("lastmessagerow",lastmessagerow[0].sender)
+                //unreadmessages[unreadmessages.length -1] && unreadmessages[unreadmessages.length -1]
+        res.json({status:"success", user:user[0],noOfUnreadMessages:unreadmessages[1],noOfUnreadChat:unreadmessages[0],lastunreadindex:lastmessagerow[0].sender})
+    })
+})
         }
     })
 })
@@ -299,6 +459,44 @@ app.post("/change-profilepic", uploads.single("files"), (req,res)=>{
         }
     )
 })
+app.get("/fetch-groupinfo",(req,res)=>{
+    conn.query("select * from chatgroups where groupid = ?", [req.query.groupid], (err, groupdetails)=>{
+        if (err) throw err;
+  
+     if(groupdetails[0].members){
+     conn.query("select * from users where userid IN ("+JSON.parse(groupdetails[0].members)+")", (err, members)=>{
+        if (err) throw err;
+        console.log("groupmembers", members.length)
+        res.json({status:"success", groupdetails:groupdetails[0], groupmembers:members})
+     })
+     }
+    })
+})
+app.get("/fetch-groups",(req,res)=>{
+    conn.query("select * from chatgroups", (err, groups)=>{
+        if (err) throw err;
+        console.log("this are all the groups", groups)
+        res.json({status:"success", groups})
+    })
+})
+app.post("/change-backgroundimage",uploads.single("files"),(req,res)=>{
+    cloudinary.v2.uploader.upload(
+        req.file.path,
+        {folder: "chatapp/backgroundimage"},
+        (error,result)=>{
+            if (error) throw err;
+            const image = `${result.original_filename}.${result.original_extension}`
+            conn.query("update users set backgroundImage = ? where userid =?",[image, req.body.id],(err, updated)=>{
+                if (err) throw err;
+                if(updated){
+                    console.log("backgroundImage pic done", image)
+                    res.json({status:"success"})
+                }
+            })
+        }
+    )
+})
+//possible outcome %1, 1%, %1%,%[1, %]
 app.get("/follow-user", (req, res)=>{
     conn.query("select followers from users where userid =?",[req.query.otheruser],(err, followers)=>{
         if (err) throw err;
@@ -307,7 +505,8 @@ app.get("/follow-user", (req, res)=>{
      if(followers && following){
      let prevfollowers =  JSON.parse(followers[0].followers)
      let prevfollowing =  JSON.parse(following[0].following)
-if((prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseInt(req.query.mainuser)) && prevfollowing.includes(req.query.otheruser) || prevfollowing.includes(parseInt(req.query.otheruser)))){
+
+if((prevfollowers && prevfollowing && (prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseInt(req.query.mainuser)))  && (prevfollowing.includes(req.query.otheruser) || prevfollowing.includes(parseInt(req.query.otheruser))))){
          prevfollowers = prevfollowers.filter(prev => prev != parseInt(req.query.mainuser))
          prevfollowing = prevfollowing.filter(prev => prev != parseInt(req.query.otheruser))
          console.log("its included", prevfollowers, prevfollowing)
@@ -344,23 +543,48 @@ if((prevfollowers.includes(req.query.mainuser) || prevfollowers.includes(parseIn
     })
 })
 app.get("/fetch-userprofile",(req,res)=>{
-    conn.query("select * from users inner join uploads on users.userid=uploads.userid where users.userid =?",[req.query.id],(err, users)=>{
+    const otherid = req.query.id
+    const ownerid = req.query.ownerid
+    if(!ownerid){
+       res.json({status:"failed", reason:"couldnt find user"})
+    }else{
+    conn.query(`select * from users inner join uploads on users.userid=uploads.userid where users.userid =? order by uploads.uploadid ASC;
+    select * from chatgroups where (members like ? or members like ? or members like ? or members like ?) 
+    AND (members like ? or members like ? or members like ? or members like ? ) `,
+    [otherid,`%,${otherid},%`,`[${otherid},%`,`%,${otherid}]`,`[${otherid}]`,`%,${ownerid},%`,`[${ownerid},%`,`%,${ownerid}]`,`[${ownerid}]`],(err, users)=>{
         if (err) throw err;
       //  console.log(users)
-       if(users.length > 0){
-        res.send(users)
+      console.log("i am going to leaving here",users)
+       if(users[0].length > 0 ){
+        console.log("i am going not to leaving here")
+        res.json({status:"success",users:users[0],commongroups:users[1]})
        }else{
-        conn.query("select * from users where userid=? ",[req.query.id],(err, justuser)=>{
+        console.log("i aalready left here")
+        conn.query(`select * from users where userid=? ; 
+        select * from chatgroups where (members like ? or members like ? or members like ? or members like ?) 
+        AND (members like ? or members like ? or members like ? or members like ? )`,
+        [otherid,`%,${otherid},%`,`[${otherid},%`,`%,${otherid}]`,`[${otherid}]`,`%,${ownerid},%`,`[${ownerid},%`,`%,${ownerid}]`,`[${ownerid}]`],(err, justuser)=>{
             if (err) throw err;
-            res.send(justuser)
+            if(justuser.length > 0){
+            res.json({status:"success",users:justuser[0], commongroups:justuser[1]})
+            }else{
+                res.json({status:"failed", reason:"could not find user"})
+            }
         })
        }
     })
+}
 })
-//fetch-user
-app.get("/user/login", (req,res)=>{
+app.get("/fetch-unread/messages",(req, res) =>{
+    conn.query("select COUNT (*) AS messageee from (select * from messages where reciever="+1+" and status =? group by sender) as mess  ",["delivered"],(err, unreadmessages)=>{
+        if(err) throw err;
+        res.send(unreadmessages[0])
+    })
+})
+app.get("/user/login",loginMail, (req,res)=>{
     conn.query(`select userid,username from users where (email =? or username=?) and password=?`,[req.query.name,req.query.name,req.query.password],(err, user)=>{
         if (err) throw err;
+
         if (!user || user.length === 0){
             console.log("it is lesser")
             res.json({message:"failed", reason:"incorrect login details"})
@@ -470,8 +694,10 @@ app.get("/like-post",(req, res)=>{
      }
     })
 })
+
+
 app.get("/fetch-uploads", (req,res)=>{
-    conn.query(`select * from uploads inner join users on users.userid=uploads.userid order by uploadid desc`, (err, uploads)=>{
+    conn.query(`select * from uploads inner join users on users.userid=uploads.userid, (SELECT COUNT(*) FROM comments where uploadid=15) AS commentCount  order by time desc`, (err, uploads)=>{
         if (err) throw err;
         res.send(uploads)
     })
@@ -495,8 +721,9 @@ if (err) throw err;
     }
 })
 app.get("/view-upload", (req,res)=>{
-    conn.query(`select * from uploads inner join users on users.userid=uploads.userid where uploads.uploadid= ${req.query.uploadid}`, (err, upload)=>{
+    conn.query(`select * from uploads inner join users on users.userid=uploads.userid, (SELECT COUNT(*) AS memberCount FROM comments where uploadid= ${req.query.uploadid}) AS meme  where uploads.uploadid= ${req.query.uploadid}`, (err, upload)=>{
         if (err) throw err;
+        console.log(upload)
         conn.query(`select * from comments inner join users on users.userid = comments.userid where comments.uploadid = ? order by comments.commentid desc`,
         [req.query.uploadid],(err, comments)=>{
             if (err) throw err;
@@ -543,15 +770,49 @@ app.post("/upload-post",uploads.array("files"),async (req,res)=>{
         }
     })
 })
+app.get("/confirm_email", (req,res)=>{
+    conn.query("select * from users where email =? and confirmed = ?", [req.query.email,"false"],(err, user)=>{
+        if (err) throw err;
+        if (user && user.length > 0 && user[0].confirmationId === req.query.confirmationId){
+            conn.query("update users set confirmed = ? where email = ?",["true", req.query.email], (err, update)=>{
+                if (err) throw err;
+                const options ={
+                    from:`"Email Confirmation Message" <yexies4ogb@gmail.com>`,
+                    to:req.query.email,
+                    subject:"Email Confirmed Successfully!",
+                    html:`Hi <b>${req.query.email}</b><br/><br/><br/><br/>,
+                   <div>
+                   <center>
+                   <p> Your Account has been confirmed successfully and you now have full access to our chat applications 
+                   and eccommercial platform to buy and sell ...</p>
+                   </center>
+                   </div>`
+                }
+                transporter.sendMail(options, (err, info)=>{
+                    if (err) throw err;
+
+                })
+                 res.json({status:"success"})
+            })         
+        }else{
+            res.json({status:"failed"})
+        }
+    })
+   
+})
 app.post("/user/register",uploads.single("files"), (req,res)=>{
     const body = JSON.parse(req.body.inputs)
+    const confirmationId = Math.floor(Math.random()*1000000)
+    console.log(confirmationId, "confirmationId")
+    const d = new Date()
     conn.query("select * from users where email =? ",[body.email],(err, user)=>{
         if (err) throw err;
         if(user && user.length > 0){
             console.log("email is taken")
             res.json({status:"failed", message:"This Email is not available"})
         }else{
-    if(req.file){
+            //kingtunlab
+    if(req.file){  
         cloudinary.v2.uploader.upload(
             req.file.path,
             {
@@ -560,29 +821,49 @@ app.post("/user/register",uploads.single("files"), (req,res)=>{
             (error, result)=>{
                 if (error) throw error;
                 const image = `${result.original_filename}.${result.original_extension}`
-                conn.query(`insert into users (name,username, email, gender,image, contact, password) values (?,?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,image,body.contact,body.password],(err, file)=>{
+                conn.query(`insert into users (name,username, email, gender,image, contact, password,following,followers,lastseen,reg_month, reg_date) values (?,?,?,?,?,?,?,'[]','[]',${d.getTime()},${d.getMonth()+1},${d.getDate()})`,[body.name,body.username,body.email,body.gender,image,body.contact,body.password],(err, file)=>{
                     if(err){ 
+                        console.log(err)
                         res.json({status:"failed"})
-                    }else if(file){
-                      res.json({status:"success",data:body})
-                  }else{
+                    }else if(!file){
                       res.json({status:"failed"})
                   }
                   })
             }
         )
     }else{
-    conn.query(`insert into users (name,username, email, gender, contact, password) values (?,?,?,?,?,?)`,[body.name,body.username,body.email,body.gender,body.contact,body.password],(err, file)=>{
+    conn.query(`insert into users (name,username,confirmationId,confirmed,reg_time, email, gender, contact, password,following, followers,lastseen,reg_month, reg_date) values (?,?,?,?,?,?,?,?,?,'[]','[]',${d.getTime()},${d.getMonth()+1},${d.getDate()})`,[body.name,body.username,confirmationId,"false",d.getTime(),body.email,body.gender,body.contact,body.password],(err, file)=>{
       if(err){ 
           res.json({status:"failed"})
-      }else if(file){
-        res.json({status:"success",data:body})
-    }else{
+      }else if(!file){
         res.json({status:"failed"})
     }
 
     })
 }
+let mailOptions ={
+    from:'"Hormel Chat!" <yexies4ogb@gmail.com>',
+    to:body.email,
+    subject:`Action Required! Please Confirm Your Email Address`,
+    html: `Hi <b>${body.name},</b><br/><br/> Please Confirm ${body.email} by clicking the button below...Thank You and Happy Connection! <br/><br/>
+    <center><a href="/${body.email}/confirm_emailAddr/${Math.floor(Math.random*1000000000)}jkdjdbn-${Math.floor(Math.random*1000000000)}odfkdmnd-${Math.floor(Math.random*100000)}dbdnd-${confirmationId}thsfghc-${Math.floor(Math.random*100000)}rjdyuhf"><button style="background-color:blue;color:white;padding:2px 10px;outline:none;border:none;border-radius:3px">Confirm</button></a></center><br/><br/>
+    <span>Having Trouble clicking the button or accessing the route kindly copy and paste the route below to your browser URL tab</span><br/><br/><br/>
+    <center>
+    <a href="http://localhost:3000/${body.email}/confirm_emailAddr/${Math.floor(Math.random*1000000000)}jkdjdbn-${Math.floor(Math.random*1000000000)}odfkdmnd-${Math.floor(Math.random*100000)}dbdnd-${confirmationId}thsfghc-${Math.floor(Math.random*100000)}rjdyuhf">
+    http://localhost:3000/${body.email}/confirm_emailAddr/${Math.floor(Math.random*1000000000)}jkdjdbn-${Math.floor(Math.random*1000000000)}odfkdmnd-${Math.floor(Math.random*100000)}dbdnd-${confirmationId}thsfghc-${Math.floor(Math.random*100000)}rjdyuhf
+    </a>
+    </center>
+    <small style="color:grey">You Are receiving this mail because you recently registered to our chat platform</small><br/><br/><br/>
+    <small style="color:red">If You didnt initiate this action kindly click on the cancel button to cancel this regsitration</small><br/>
+    <button style="background-color:red;color:white;padding:2px 4px;border-radius:3px">cancel</button>`
+  }
+  transporter.sendMail(mailOptions, (err, info)=>{
+    if (err) throw err;
+    else{
+      console.log("email sent to ", body.email)
+      res.json({status:"success",data:body})
+    }
+  })
 }
 })
 })

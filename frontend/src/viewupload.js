@@ -8,7 +8,7 @@ import { createContext } from 'react';
 import { userContext } from './contextJs';
 const CryptoJS = require("crypto-js")
 
-function ViewUpload() {
+function ViewUpload(props) {
     const [selectedpost, setselectedpost] =useState({})
     const [tempolikes, settempolikes] = useState({})
     const [comment, setComment] = useState("")
@@ -25,7 +25,7 @@ function ViewUpload() {
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
           setmainuser(decryptedData)
-     axios.get(`https://realchatapps.herokuapp.com/view-upload?uploadid=${params.uploadid}`)
+     axios.get(`http://localhost:5000/view-upload?uploadid=${params.uploadid}`)
      .then(res => {
         if(res.data.status === "success"){
             setselectedpost(res.data.post)
@@ -45,11 +45,19 @@ function ViewUpload() {
         e.preventDefault()
         setComment("")
       if(comment.length > 0){
-        axios.get(`https://realchatapps.herokuapp.com/upload-comment?mainuser=${mainuser}&&uploadid=${params.uploadid}&&comment=${comment}`)
+        axios.get(`http://localhost:5000/upload-comment?mainuser=${mainuser}&&uploadid=${params.uploadid}&&comment=${comment}`)
         .then(res =>{
             if (res.data.status === "success"){
                 setcomments(res.data.comments)
                 setcommentadded("1")
+                axios.get(`http://localhost:5000/view-upload?uploadid=${params.uploadid}`)
+                .then(res => {
+                   if(res.data.status === "success"){
+                       setselectedpost(res.data.post)
+                       setcomments(res.data.comments)
+                   }
+                })
+                .catch(err => console.log(err))
                 setTimeout(()=>{
                     setcommentadded("0")
                    }, 3000)
@@ -58,7 +66,7 @@ function ViewUpload() {
         .catch(err => console.log(err))
       }
     }
-    console.log("singleuser", singleuser)
+    console.log("singleuser", selectedpost)
     return (  
         <div style={{backgroundColor:"rgba(242,242,242)"}}>
         <div className='container'>
@@ -98,16 +106,16 @@ function ViewUpload() {
                          <small style={{fontSize:"18px"}} className={tempolikes[`${selectedpost.uploadid}`] && tempolikes[`${selectedpost.uploadid}`].includes(parseInt(mainuser)) ? "text-primary ml-1" :selectedpost.likes && JSON.parse(selectedpost.likes).includes(parseInt(mainuser)) ? "text-primary ml-1" : "text-muted ml-1"}>{tempolikes[`${selectedpost.uploadid}`] && tempolikes[`${selectedpost.uploadid}`].length || selectedpost.likes && JSON.parse(selectedpost.likes).length}</small>
                     </div>
                     <div style={{width:"20%"}}>
-                    <span className='ml-3 fa fa-comment-o' style={{fontSize:"20px",color:"red"}}></span> <small style={{fontSize:"18px"}}>{selectedpost.likes && JSON.parse(selectedpost.likes).length}</small>
+                    <span className='ml-3 fa fa-comment-o' style={{fontSize:"20px",color:"red"}}></span> <small style={{fontSize:"18px"}}>{selectedpost && selectedpost.memberCount}</small>
                     </div>
                 
              </div>
              
              <div style={{display:"flex",padding:"0",margin:"0"}}>
              <div style={{padding:"10px",width:"20%"}}>
-                    <img src={singleuser ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${singleuser.image}` : "https://i.stack.imgur.com/sXK51.png"} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
+                    <img src={props.user ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${props.user.image}` : "https://i.stack.imgur.com/sXK51.png"} style={{width:"100%",border:"1px solid grey",borderRadius:"50%",height:"50px"}}/>
                 </div>
-                <div className='imagedisplay' style={{width:"80%",padding:"5px"}}>
+                <div className='imagedisplay' style={{width:"80%",padding:"10px",marginTop:"5px"}}>
                     <form method="get" onSubmit={addComment}>
                     <input type='text' className='form-control' style={{border:"1px solid lightgrey",borderRadius:"20px",padding:"5px"}} name="comment" onChange={change} value={comment} placeholder="Write a Comment"></input><br/>
                     <button className='d-none btn text-primary' style={{padding:"0",visibility:"hidden"}} type="submit">submit</button>

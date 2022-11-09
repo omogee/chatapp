@@ -4,7 +4,7 @@ import Inbox from './inbox';
 import axios from "axios"
 import Cookies from "js-cookie"
 import Login from "./login"
-import {useParams} from "react-router-dom"
+import {useParams, Navigate} from "react-router-dom"
 import { userContext } from './contextJs';
 const CryptoJS = require("crypto-js")
 
@@ -15,6 +15,7 @@ function ChatApp(props) {
     
     const querystring = new URLSearchParams(window.location.search)
     const params = useParams()
+
   useEffect(()=>{
       if(!Cookies.get("cvyx") || !params.userId || params.userId === null){
       setredirect(true)
@@ -27,10 +28,10 @@ function ChatApp(props) {
         var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   
-   axios.get(`https://realchatapps.herokuapp.com/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
+   axios.get(`http://localhost:5000/fetch-user?inboxuserId=${params.userId}&&mainuserId=${decryptedData}`)
    .then(res => {
        if(res.data.length === 0 || !res.data){
-  //    setredirect(true)
+      setredirect(true)
        }else{
            setuser(res.data[0])
        }
@@ -40,7 +41,9 @@ function ChatApp(props) {
     },[params])
    
     if(redirect){
-        return <Login previouspage={window.location.pathname + window.location.search}/>
+        return(
+            < Navigate to="/login" state="hello"></Navigate>
+            )
     }else{
     return (  
         <div className='container'>

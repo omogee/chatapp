@@ -14,7 +14,9 @@ function Uploads(props) {
     const [tempolikes, settempolikes] = useState({})
     const [files, setfiles] = useState([])
     const [caption, setcaption] = useState("")
-  
+   const [uploadmessage, setuploadmessage] = useState("")
+   const [uploadstatuscolor, setuploadstatuscolor] = useState("")
+
   const  filechange=(e)=>{
      if(images.length <= 3){
         setfiles(prev =>([...prev, e.target.files[0]]))
@@ -37,7 +39,7 @@ function Uploads(props) {
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
           setmainuser(decryptedData)
-        axios.get(`https://realchatapps.herokuapp.com/fetch-uploads`)
+        axios.get(`http://localhost:5000/fetch-uploads`)
         .then( res => {setUploads(res.data)})
         .catch(err => console.log(err))
         }
@@ -66,7 +68,7 @@ function Uploads(props) {
         if(Cookies.get("cvyx") ){ 
             var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
           const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-        axios.get(`https://realchatapps.herokuapp.com/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
+        axios.get(`http://localhost:5000/like-post?uploadid=${uploadid}&&id=${decryptedData}`)
         .then(res =>{ 
             if(res.data.status === "success"){
       settempolikes({...tempolikes, [`${uploadid}`]:res.data.likes})
@@ -80,7 +82,7 @@ function Uploads(props) {
     },[tempolikes])
 const uploadpost =()=>{
     
-    if(Cookies.get("cvyx") ){ 
+    if(Cookies.get("cvyx")){ 
         var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
       const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
     const formdata = new FormData()
@@ -89,10 +91,29 @@ const uploadpost =()=>{
     files.map(img =>{
         formdata.append("files",img)
     })
-    axios.post(`https://realchatapps.herokuapp.com/upload-post`, formdata)
-    .then( res => {console.log(res.data)})
+    axios.post(`http://localhost:5000/upload-post`, formdata)
+    .then( res => {
+        if(res.data.status === "success"){
+            setuploadmessage("Post Uploaded Successfully")
+            setfiles([])
+            setimages([])
+            setcaption("")
+            setTimeout(()=>{
+                setuploadstatuscolor("green")
+                setuploadmessage("")
+            //    setdisplay("none")
+            },2000)
+        }else{ 
+            setuploadstatuscolor("red")
+            setuploadmessage(res.data.message)
+        }
+    })
     .catch(err => console.log(err))
 }
+}
+const upload =()=>{
+    window.scrollTo(0,0)
+    setdisplay(display === "block" ? "none" : "block")
 }
 const removeImage=(img,index)=>{
   setimages(images.filter(prev => prev !== img))
@@ -113,7 +134,9 @@ const openpost =()=>{
              <div style={{position:"absolute",right:"5px",top:'5px'}}>
               <span className='fa fa-times ' style={{fontSize:"25px"}}></span>
              </div>
+            
              <div style={{display:"flex",flexWrap:"wrap"}}>
+               
                 {images.length > 0 ? images.map(img => 
                 <div style={{width:"45%",position:"relative",height:"100px",padding:"3px"}}>
                 <div style={{position:"absolute",right:"2px",top:'2px'}}>
@@ -148,8 +171,9 @@ const openpost =()=>{
     return ( 
        <div style={{backgroundColor:"rgba(242,242,242)"}}>
        <br/>
-        <div style={{position:"fixed",color:"lightgrey",padding:"2px 10px",borderRadius:"20px",zIndex:"10",backgroundColor:"indianred",bottom:"10px",right:"10px"}}>
-     <p> <span className='fa fa-upload fa-2x' onClick={()=> setdisplay(display === "block" ? "none" : "block")}></span> Upload</p>
+        <div style={{position:"fixed",cursor:"pointer",color:"lightgrey",padding:"2px 10px",borderRadius:"20px",zIndex:"10",backgroundColor:"indianred",bottom:"10px",right:"10px"}}>
+     <p> <span className='fa fa-upload fa-2x mr-1' onClick={upload} ></span>
+       Upload</p>
         </div>
          <div className={props.contain ? `container` : 'container contain'} style={{margin:"80px 0px"}}>
          <div style={{display:`${display}`}}>
@@ -158,6 +182,7 @@ const openpost =()=>{
              <div style={{position:"absolute",right:"5px",top:'5px'}}>
               <span className='fa fa-times text-muted' onClick={()=> setdisplay("none")} style={{fontSize:"30px",fontWeight:"lighter"}}></span>
              </div>
+             <p style={{textAlign:"center",color:`${uploadstatuscolor}`,fontStyle:"italic",fontWeight:"bold"}}>{uploadmessage}</p>
              <div style={{display:"flex",flexWrap:"wrap"}}>
                 {images.length > 0 ? images.map((img,index) => 
                 <div style={{width:"45%",position:"relative",padding:"3px"}}>
@@ -205,7 +230,7 @@ const openpost =()=>{
                 <p>{upload.caption}</p>
                 <small></small>
              </div>
-            < Link to={`/view-upload/${upload.uploadid}`}>
+            < a href={`/view-upload/${upload.uploadid}`}>
              <div className='row' style={{padding:"2px 15px"}}>            
                 {upload.imgs && JSON.parse(upload.imgs) ? 
               JSON.parse(upload.imgs).map(img =>
@@ -215,7 +240,7 @@ const openpost =()=>{
                   )
            : null}
               </div>
-         </Link>
+         </a>
              
                 <div style={{display:"flex",width:"100%", justifyContent:"space-between"}}>
                     <div className='ml-3' style={{width:"20%",padding:"5px"}}>

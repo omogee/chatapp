@@ -17,17 +17,19 @@ function Login(props) {
     const change =(e)=>{
       setinput(prev => ({...prev, [e.target.name]:e.target.value}))
     }
+ 
     const login =()=>{
-        axios.get(`https://realchatapps.herokuapp.com/user/login?name=${input.username}&password=${input.password}`)
+        axios.get(`http://localhost:5000/user/login?name=${input.username}&password=${input.password}`)
         .then(res => {
              if(Cookies.get("cvyx")){
                  var bytes = CryptoJS.AES.decrypt(Cookies.get("cvyx"), 'my-secret-key@123');
-  const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+                const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
 
                     socket.emit("removeUser", parseInt(decryptedData))
                 }
             if(res.data.message === "failed"){
               setloginmessage(res.data.reason)
+              setinput({})
             }else{
                 setloginmessage("login successful")
                
@@ -37,27 +39,31 @@ function Login(props) {
     Cookies.set("cvyx", `${cipheridmain}`, { expires: 0.3555 })
   socket.emit("addUser", parseInt(res.data.user[0].userid))
                setTimeout(() => {
-                   if(props.previouspage){
+               /*    if(props.previouspage){
                        window.location.assign(props.previouspage)
                    }else{
                        window.location.assign(`/`)
                    }
+                    <button onClick={()=> navigate(-1)}>go back</button>
+                   */
+                    window.location.assign(`/`)
                 }, 1000);
             
             }
         })
         .catch(err => console.warn(err))
     }
+    console.log(props, "props")
     return ( 
         <div>
-             <div style={{height:"100%",width:"100%",position:"fixed",backgroundRepeat:"no-repeat",backgroundSize:"cover",backgroundImage:`url(${background})`}}>
+             <div style={{height:"100%",width:"100%",position:"fixed",zIndex:"-1",backgroundRepeat:"no-repeat",backgroundSize:"cover",backgroundImage:`url(${background})`}}>
         </div>
         
         <div className="container">
             <br/><br/><br/><br/><br/><br/>
           <div className='row' >
               <div className='d-none d-md-block  col-md-3 col-lg-4'></div>
-              <div className='col-12 col-md-6 col-lg-4' style={{backgroundColor:"rgba(255,255,255,0.8)",padding:"20px"}}>
+              <div className='col-12 col-md-6 col-lg-4' style={{zIndex:"2",backgroundColor:"rgba(255,255,255,0.8)",padding:"20px"}}>
                   <div style={{width:"100%"}}>
                    <div style={{textAlign:"center"}}>
                        <h4 className="title">LOGIN</h4>
@@ -76,6 +82,7 @@ function Login(props) {
                        <button className='btn btn-sm' onClick={login} style={{backgroundColor:"#FF6347",color:"white",fontWeight:"bold",width:"100%"}}>
                            LOGIN
                        </button>
+                      
                        <div style={{marginTop:"60px",fontSize:"18px"}}>
                            <center>
                                <small>Not Yet a Registered User</small><br/>

@@ -21,7 +21,7 @@ const register =()=>{
     formdata.append("files", inputs.file)
     console.log("inputs",formdata.get('inputs'))
     console.log("files", formdata.get("files"))
-    axios.post(`https://realchatapps.herokuapp.com/user/register`,formdata,
+    axios.post(`http://localhost:5000/user/register`,formdata,
     {
         headers: {
           'Content-Type': 'application/json'

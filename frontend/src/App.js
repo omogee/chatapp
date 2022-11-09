@@ -16,6 +16,11 @@ import Users from './users';
 import Inbox from './inbox';
 import Uploads from './upload';
 import ViewUpload from './viewupload';
+import Groupinbox from './groupinbox';
+import ChatGroup from './chatgroup';
+import Groups from './groups';
+import GroupProfile from './groupprofile';
+import ConfirmEmail from './confirmemail';
 
 const CryptoJS = require("crypto-js")
 
@@ -30,6 +35,9 @@ function App() {
   const [typingclients, settypingclients]= useState([])
   const [lastseen, setlastseen] = useState({})
   const [pageurl, setpageurl] = useState("")  
+  const [noOfUnreadMessages, setnoOfUnreadMessages] = useState(0)
+  const [groupmessages, setgroupmessages] = useState({})
+  const [lastunreadindex, setlastunreadindex] = useState('')
   const [value, setvalue] = useState("i am the context value man, its better in states")
 
   useEffect(()=>{
@@ -38,15 +46,25 @@ function App() {
   var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
    socket.connect() 
 
-    axios.get(`https://realchatapps.herokuapp.com/fetch-users?id=${decryptedData}`)
-    .then(res => setusers(res.data))
-    .catch(err => console.warn(err))
+    axios.get(`http://localhost:5000/fetch-users?id=${decryptedData}`)
+    .then(res =>{ setusers(res.data)})
+    .catch(err => {
+      if(err && err.response.status === "401"){
+        console.log("status is returning 401")
+      }else{
+        console.log("status is okay")
+      }
+    })
 
-    axios.get(`https://realchatapps.herokuapp.com/fetch-justuser?id=${decryptedData}`)
-    .then(res => setuser(res.data.user))
+    axios.get(`http://localhost:5000/fetch-justuser?id=${decryptedData}`)
+    .then(res => {
+      setuser(res.data.user)
+      setnoOfUnreadMessages(res.data.noOfUnreadMessages)
+      setlastunreadindex(res.data.lastunreadindex)
+    })
     .catch(err => console.log(err))
     /*
-    axios.get(`https://realchatapps.herokuapp.com/fetch-pendingconnections?requestid=${decryptedData}`)
+    axios.get(`http://localhost:5000/fetch-pendingconnections?requestid=${decryptedData}`)
     .then(res => {
       console.log("res.data", res.data.requestedconn, res.data.pendingconn)
       setrequestedconn(res.data.requestedconn)
@@ -54,7 +72,7 @@ function App() {
     })
     .catch(err => console.warn(err))
 */
-     axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
+     axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
     .then(res => {
       setrequestedconn(res.data.requestedconn)
       setpendingconn(res.data.pendingconn)
@@ -66,9 +84,8 @@ function App() {
 
 useEffect(()=>{
   socket.on("online users", connectedusers =>{
-    console.log("connectedusers",connectedusers)
     setOnline(connectedusers)
-})
+},[])
 
 socket.on("incomingmessage",(typer)=>{
      console.log("typingclients",typer)
@@ -79,6 +96,28 @@ socket.on("incomingmessage",(typer)=>{
      console.log("typingclients after pushing",prevTypers)
   settypingclients(prevTypers)
   }
+})
+/**if(!groupmessages[`${data.room}`]){
+   
+    groupmessages[`${data.room}`] = [data]
+    console.log("i am here also", groupmessages)
+    setgroupmessages(groupmessages)
+    console.log("i am here also also", groupmessages)
+  }
+  else if(groupmessages[`${data.room}`] && !groupmessages[`${data.room}`].includes(data)){
+    groupmessages[`${data.room}`].push(data)
+    setgroupmessages(groupmessages)
+  } */
+socket.on("room_message_delivery", data=>{
+console.log("i am here")
+let gpmessages = groupmessages;
+  if(!gpmessages[`${data.room}`]){
+    gpmessages[`${data.room}`] = [data]
+  }
+  else if(gpmessages[`${data.room}`] && !gpmessages[`${data.room}`].includes(data)){
+    gpmessages[`${data.room}`].push(data)
+  }
+  setgroupmessages(gpmessages)
 })
 socket.on("lastseen", data=>{
   let d = new Date()
@@ -150,30 +189,36 @@ let requested=[]
 useEffect(()=>{
   setpageurl(window.location.pathname)
 },[])
-console.log("user",user)
+console.log("justuser", user)
   return (
     <Router>
-      { pageurl.indexOf("chat") > -1 || pageurl.indexOf("connections") > -1 
+      { pageurl.indexOf("chat") > -1 || pageurl.indexOf("inbox") > -1 || pageurl.indexOf("connections") > -1 || pageurl.indexOf("group") > -1 
       ?
       null
-      : <Navbar pendingconn={pendingconn}  requestedconn={requestedconn}/>
+      : <Navbar user={user} lastunreadindex={lastunreadindex} pendingconn={pendingconn}  requestedconn={requestedconn} noOfUnreadMessages={noOfUnreadMessages}/>
     }
-    <userContext.Provider value={{users:[users, setusers],user:[user,setuser], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
+    <userContext.Provider value={{users:[users, setusers],gpmess:[groupmessages,setgroupmessages],user:[user,setuser], conns:[connects, setconnects], pendingconn:[pendingconn,setpendingconn], requestedconn:[requestedconn, setrequestedconn]}}>
       <Routes>  
        <Route exact path="/" element={<Home connects={connects} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} userslength={users ? users.length: null} online={online} users={users}/>} />
         <Route exact path="/login" element={<Login />} />
+        <Route exact path="/:email/confirm_emailAddr/:confirmationId" element={<ConfirmEmail/>} />
         <Route exact path="/register" element={<Register />} />
         <Route exact path="/users" element={<Users users={users} pendingconn={pendingconn} requestedconn={requestedconn} lastseen={lastseen} connects={connects} online={online}/>} />
         <Route  path="/chat/:userId" element={ <ChatApp users={connections} connects={connects} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
-        <Route  path="/inbox/:userId" element={ <Inbox users={connections} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
-        <Route  path="/connections/:userId" element={/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />
-        <Route exact path="/profile/:userId" element={<Profile />} /> 
+        <Route  path="/inbox/:userId" element={ <Inbox users={connections} connects={connects} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
+        <Route  path="/connections/:userId" element={<Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> } />
+        <Route exact path="/profile/:userId" element={<Profile  online={online} mainuser={user}/>} /> 
+        <Route exact path="/profile/group/:groupId" element={<GroupProfile online={online}/>} />
         <Route exact path="/uploads" element={<Uploads />} />
-        <Route exact path="/view-upload/:uploadid" element={<ViewUpload />} />
+        <Route exact path="/groups" element={<Groups />} />
+        <Route exact path="/group/:groupid" element={<Groupinbox groupmessages={groupmessages} user={user}/>} />
+        <Route  path="/chat/group/:groupid" element={ <ChatGroup groupmessages={groupmessages} user={user} users={connections} connects={connects} lastseen={lastseen} online={online} typingclients={typingclients}/>} />
+        <Route exact path="/view-upload/:uploadid" element={<ViewUpload  user={user}/>} />
       </Routes>
          </userContext.Provider>
     </Router>
   );
 }
+//<Route  path="/connections/:userId" element={!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? <Connection conn={connections} lastseen={lastseen} online={online} typingclients={typingclients}/> : null} />
 
 export default App;

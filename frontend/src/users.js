@@ -54,7 +54,7 @@ const connects =(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`https://realchatapps.herokuapp.com/connect-user?id=${JSON.stringify(ids)}`)
+    axios.get(`http://localhost:5000/connect-user?id=${JSON.stringify(ids)}`)
     .then(res => {
         if(res.data.message === "connection removed" && res.data.status ==="success"){
        console.log("connection removed")
@@ -74,7 +74,7 @@ const acceptconnect =(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`https://realchatapps.herokuapp.com/accept-pendingrequests?id=${JSON.stringify(ids)}`)
+    axios.get(`http://localhost:5000/accept-pendingrequests?id=${JSON.stringify(ids)}`)
     .then(res => {
          if(res.data.message === "connection added" && res.data.status ==="success"){
             setrequestedconn(mainrequestedconn.filter(reqconn => reqconn !== id))
@@ -90,7 +90,7 @@ const removerequest=(id)=>{
       var decryptedData = bytes.toString(CryptoJS.enc.Utf8);
      let ids ={otheruserid:id, mainuserid:decryptedData}
      console.log(ids)
-    axios.get(`https://realchatapps.herokuapp.com/remove-request?id=${JSON.stringify(ids)}`)
+    axios.get(`http://localhost:5000/remove-request?id=${JSON.stringify(ids)}`)
     .then(res => {
          if(res.data.message === "pendingconnection removed" && res.data.status ==="success"){
            setpendingconn(mainpendingconn.filter(pendconn => pendconn !== id))
@@ -116,7 +116,7 @@ return (
                   
                         <div className='row'  key={connect.id} style={{padding:"5px",borderBottom:"0.4px solid lightgrey"}}>
                             <div className='col-3' style={{padding:"5px"}}>
-                                <img style={{borderRadius:"50%",width:"100%",border:"2px solid lightgrey",padding:"1px"}} src={connect.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
+                                <img style={{borderRadius:"50%",width:"100%",height:"70px",border:"2px solid lightgrey",padding:"1px"}} src={connect.image ? `https://res.cloudinary.com/fruget-com/image/upload/v1659648594/chatapp/profilepicture/${connect.image}` : connect.gender === "male" ? `https://cdn.pixabay.com/photo/2018/08/28/12/41/avatar-3637425__340.png` : require(`./female.png`)} />
                             </div>
                             <div className='col-5' style={{position:"relative"}}>
                                 <div style={{position:"absolute",left:"0",top:"10%",lineHeight:"1"}}>

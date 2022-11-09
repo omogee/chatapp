@@ -1,22 +1,25 @@
 import React, { useState, useEffect,useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import socket from "./socketconn"
 import {useNavigate, useParams} from "react-router-dom"
 import Cookies from "js-cookie"
 import axios from "axios"
 import {formater, formatermain} from "./formatTime"
+import "./main.css"
 
-const CryptoJS = require("crypto-js")
+const CryptoJS = require("crypto-js") 
 
 function Connection(props) {
     const [typingclients, settypingclients] = useState([])
     const [conn,setconn] = useState([])
+    const [redirect, setredirect] = useState(false)
     const [allmessages,setAllmessages]=useState({})
     const [ownerid, setownerid] = useState({})
     const [groupdetails, setgroupdetails] = useState({})
+    const [groupresponse, setgroupresponse] = useState({})
     const [displaynewgroupmodal, setdisplaynewgroupmodal] = useState("none")
     const [allmessagecount,setAllmessagecount]= useState({})
-    const [groupresponse, setgroupresponse] = useState({})
+  
     const [groups, setgroups] = useState([])
       let navigate = useNavigate()
       const hiddenref = useRef(null)
@@ -30,7 +33,7 @@ function Connection(props) {
           console.log("decryptedData",decryptedData)
           setownerid(parseInt(decryptedData))
           setgroupdetails({ownerid:parseInt(decryptedData)})
-          axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${decryptedData}`)
+          axios.get(`http://localhost:5000/fetch-connections?id=${decryptedData}`)
           .then(res => setconn(res.data.connections))
           .catch(err => console.warn(err))
       //    setuserId(params.userId)
@@ -70,14 +73,14 @@ function Connection(props) {
 },[])
 useEffect(()=>{
    socket.on("sending message", data =>{ 
-  axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
+  axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
   .then(res => {
     setconn(res.data.connections)
   })
   .catch(err => console.warn(err))
     })
     socket.on("recieving message", data =>{ 
-      axios.get(`https://realchatapps.herokuapp.com/fetch-connections?id=${ownerid}`)
+      axios.get(`http://localhost:5000/fetch-connections?id=${ownerid}`)
       .then(res => {
         setconn(res.data.connections) 
       })
@@ -89,12 +92,12 @@ const groupchange =(e)=>{
 }
 const creategroup=()=>{
   const group = JSON.stringify(groupdetails)
-  axios.get(`https://realchatapps.herokuapp.com/create-group?group=${group}`)
+  axios.get(`http://localhost:5000/create-group?group=${group}`)
   .then(res => setgroupresponse(res.data))
   .catch(err=> console.log(err))
 }
 useEffect(()=>{
-  axios.get(`https://realchatapps.herokuapp.com/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
+  axios.get(`http://localhost:5000/fetch-group?ownerid=${JSON.stringify(ownerid)}`)
   .then(res => {
     if( res.data.status === "success"){
       setgroups(res.data.groups)
@@ -160,18 +163,21 @@ const Messages =()=>{
     return(
       <div className='container'>
         {groups && groups.length > 0 ? groups.map(group =>
-        <div className='row' key={group.groupId}>
+      <div>
+          <div className='row' key={group.groupId}>
            <div className='col-3' style={{padding:"5px"}}>
-         <img style={{borderRadius:"50%",width:"100%",border:"2px solid lightgrey",padding:"5px"}} src={`https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZGwJBI7Lc_HwIroVIGs9zWvHTUf9XK40STQ&usqp=CAU`} />
+         <img style={{borderRadius:"50%",width:"100%",height:"80px",border:"2px solid lightgrey",padding:"5px"}} src={`https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRZGwJBI7Lc_HwIroVIGs9zWvHTUf9XK40STQ&usqp=CAU`} />
      </div>
      <div className='col-9' style={{position:"relative"}}>
          <div style={{position:"absolute",top:"20%",lineHeight:"1",width:"100%"}}>
-       <a style={{textDecoration:"none"}} href={`/group/${group.title}/${group.groupId}`}><small style={{fontSize:"17px",padding:"0",margin:"0",color:"black"}}>{group.title}</small> </a><br/>
+       <a style={{textDecoration:"none"}} href={`/chat/group/${group.groupId}?display=groups`}><small style={{fontSize:"17px",padding:"0",margin:"0",color:"indianred",textTransform:"uppercase"}}>{group.title} <span className='fa fa-users'></span></small> </a><br/>
+      <br/><br/><br/> <small style={{fontSize:"12px"}}>{group.about && group.about.length > 28 ? group.about.slice(0,28) + "...": group.about}</small>
          <small className='mt-1' style={{float:"right",clear:"both",color:"black",marginLeft:"5px"}}>created {formatermain(group.time)}</small> 
       
      </div>
      </div>
-        </div>
+        </div><hr/>
+      </div>
         ) : <h1 style={{marginTop:"40vh"}}>You Have not joined any group yet</h1>}
       </div>
     )
@@ -181,7 +187,7 @@ const Messages =()=>{
     <div style={{display:`${displaynewgroupmodal}`}}>
     <div style={{position:"fixed",top:"0px",zIndex:"10000",height:"100%",width:"100%",backgroundColor:"rgba(0,42,55,0.4)"}}>
   </div>
-  <div style={{position:"fixed",top:"30%",padding:"50px 30px",height:"45%",left:"35%",width:"30%",borderRadius:"10px",backgroundColor:"white",zIndex:"100000"}}>
+  <div className="creategroupmodal" style={{position:"fixed",padding:"50px 30px",borderRadius:"10px",backgroundColor:"white",zIndex:"100000"}}>
     <div style={{position:"absolute",right:"10px",top:"10px"}}>
       <span className='fa fa-times' onClick={()=>setdisplaynewgroupmodal("none")} style={{fontSize:'17px'}}></span>
     </div>
@@ -195,6 +201,10 @@ const Messages =()=>{
   </div>
    )
   }
+  if(redirect){
+    <Navigate to="/login"></Navigate>
+  }
+  else{
   return(
     <div style={{padding:"0",margin:"0"}}>
    
@@ -225,6 +235,7 @@ const Messages =()=>{
     : null}
     </div>
   )
+}
 }
 
 export default (Connection);

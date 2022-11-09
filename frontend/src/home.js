@@ -5,15 +5,19 @@ import {useNavigate, useParams} from "react-router-dom"
 import Cookies from "js-cookie"
 import "./main.css"
 import { userContext,connectContext } from './contextJs';
+import axios from "axios"
+import Groups from './groups';
 
 function Home(props) {
   const [showusers, setShowusers] = useState("none")
+   const [showgroups,setshowgroups ] = useState("none")
   const [redirect, setredirect] = useState(false)
   const querystring = new URLSearchParams(window.location.search)
   const navigate =useNavigate()
   const isIniRender = useRef(true)
   const params = useParams()
   //for useContext we use curly brackets and not array brackets
+ 
   const {value, setvalue} = useContext(userContext)
 
   useEffect(()=>{
@@ -82,8 +86,10 @@ function Home(props) {
       observer_y.observe(elem)
     })
   },[])
+
     return ( 
         <div >
+          
           <div style={{position:"fixed",bottom:"10px",right:"10px",zIndex:"100000"}}>
           <button className='btn' style={{borderRadius:"100px",fontWeight:"bold",textTransform:"uppercase",backgroundColor:"indianred",color:"white",fontWeight:"bold"}}>
             <span className='fa fa-phone' onClick={()=> setvalue("this mf changed me")}></span> Contact Us
@@ -132,10 +138,22 @@ function Home(props) {
         </div>
         <div>
           {showusers === "block" ? 
-        <div className='usersdiv' style={{display:`${showusers}`,position:"fixed",height:"70%",borderRadius:"10px",zIndex:"10",backgroundColor:"white"}}>
+          <div style={{width:"100%", height:"100%",position:'fixed',top:"0",opcaity:"0.6",backgroundColor:'rgb(0,0,0,0.4)',zIndex:"30"}}>
+        <div className='usersdiv' style={{display:`${showusers}`,position:"absolute",zIndex:"50",height:"70%",borderRadius:"10px",zIndex:"10",backgroundColor:"white"}}>
         <small onClick={undisplayusers}  style={{cursor:"pointer",float:"right",fontSize:"20px",padding:"10px"}}>X</small>
         <div style={{overflow:"scroll",height:"100%"}}>
         <Users users={props.users} pendingconn={props.pendingconn} requestedconn={props.requestedconn} lastseen={props.lastseen} connects={props.connects} online={props.online}/>
+        </div>
+        </div>
+        </div>
+        : null}
+          {showgroups === "block" ? 
+          <div style={{width:"100%", height:"100%",position:'fixed',top:"0",opcaity:"0.6",backgroundColor:'rgb(0,0,0,0.4)',zIndex:"30"}}>
+        <div className='usersdiv' style={{display:`${showgroups}`,position:"absolute",zIndex:"50",height:"70%",borderRadius:"10px",zIndex:"10",backgroundColor:"white"}}>
+        <small onClick={()=>setshowgroups("none")}  style={{cursor:"pointer",float:"right",fontSize:"20px",padding:"10px"}}>X</small>
+        <div style={{overflow:"scroll",height:"100%"}}>
+        <Groups />
+        </div>
         </div>
         </div>
         : null}
@@ -161,7 +179,7 @@ function Home(props) {
                        </div>
                        </div>
                        <div className='col-12 col-md-6'>
-                       <div  style={{color:"white",margin:"10px",width:"100%",borderRadius:"10px",padding:"30px",backgroundColor:"#FF6347",cursor:"pointer"}}>
+                       <div onClick={()=>setshowgroups("block")} style={{color:"white",margin:"10px",width:"100%",borderRadius:"10px",padding:"30px",backgroundColor:"#FF6347",cursor:"pointer"}}>
                        <center>
                            <h4>Join Room <span className='fa fa-home'></span> + </h4>
                            <small tyle={{fotWeight:"bold"}}>  Select a room from the list of created rooms that fits your interest .</small><br/>
